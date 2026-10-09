@@ -1,0 +1,24 @@
+{
+  "name": "heavy-doom-metal",
+  "version": "1.0.0",
+  "description": "Survival roguelike em primeira pessoa com sprites de Doom (Phaser 3 + Vite)",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "assets": "node tools/recortar.mjs",
+    "teste": "node tools/teste.mjs",
+    "sons": "node tools/copiar-sons.mjs",
+    "heavy": "powershell -ExecutionPolicy Bypass -File tools/gerar-heavy.ps1"
+  },
+  "type": "module",
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.63.0",
+    "sharp": "^0.35.5",
+    "vite": "^8.3.3"
+  },
+  "private": true
+}
