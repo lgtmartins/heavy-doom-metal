@@ -1,4 +1,4 @@
-// Números do chefão (Spider Mastermind). A vida e a velocidade base estão em data/inimigos.js.
+// Números do chefão (Eddie 80; no jogo original, o Spider Mastermind). A vida e a velocidade base estão em data/inimigos.js.
 export const CHEFE = {
   fracaoFuria: 0.5,            // abaixo de 50% de vida entra em fúria
   velFuria: 2.9,

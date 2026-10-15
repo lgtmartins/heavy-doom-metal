@@ -34,12 +34,11 @@ export class CenaMenu extends Phaser.Scene {
 
   create() {
     this.saindo = false; // a instância da cena é reaproveitada: zera o estado a cada entrada
-    // fundo: o céu infernal do próprio pack, ampliado, com um degradê escuro por cima
-    const ampliacao = TELA_A / 128;
-    this.ceu = this.add.tileSprite(0, 0, Math.ceil(TELA_L / ampliacao), 128, 'skies', 'sky_inferno').setOrigin(0).setScale(ampliacao);
-    this.ceu.tilePositionX = this.registry.get('ceuDoMenu') || 0; // o céu continua de onde estava ao trocar de tela
+    // fundo fixo: a pintura das catedrais (Assets/heavy/fundo-menu.png), já no tamanho da tela
+    this.add.image(0, 0, 'fundoMenu').setOrigin(0);
+    // degradê escuro por cima, mais forte embaixo, para os botões ficarem legíveis
     const g = this.add.graphics();
-    g.fillGradientStyle(0x000000, 0x000000, 0x200000, 0x200000, 0.25, 0.25, 0.92, 0.92);
+    g.fillGradientStyle(0x000000, 0x000000, 0x100000, 0x100000, 0.1, 0.1, 0.78, 0.78);
     g.fillRect(0, 0, TELA_L, TELA_A);
 
     if (this.tela === 'comoJogar') this.telaComoJogar();
@@ -47,17 +46,33 @@ export class CenaMenu extends Phaser.Scene {
     else this.telaPrincipal();
   }
 
-  update(_t, delta) {
-    this.ceu.tilePositionX += delta * 0.004; // o céu desliza devagar
-    this.registry.set('ceuDoMenu', this.ceu.tilePositionX);
+  /**
+   * Faz o logo piscar como letreiro de neon com mau contato: fica aceso quase o tempo
+   * todo e, de tempos em tempos, dá uma rajada de 2 a 4 piscadas rápidas.
+   * Os temporizadores de 	his.time morrem sozinhos quando a cena troca de tela.
+   *   PISCADA     ms de cada apagão (e de cada volta a acender)
+   *   APAGADO     quão apagado ele fica (0 = some, 1 = não muda)
+   *   ENTRE       intervalo entre uma rajada e outra, em ms [mínimo, máximo]
+   */
+  piscarLogo(logo) {
+    const PISCADA = 70, APAGADO = 0.15, ENTRE = [1500, 4000];
+    const rajada = () => {
+      const piscadas = Phaser.Math.Between(2, 4);
+      for (let i = 0; i < piscadas; i++) {
+        this.time.delayedCall(i * PISCADA * 2, () => logo.setAlpha(APAGADO));
+        this.time.delayedCall(i * PISCADA * 2 + PISCADA, () => logo.setAlpha(1));
+      }
+      this.time.delayedCall(Phaser.Math.Between(ENTRE[0], ENTRE[1]), rajada);
+    };
+    this.time.delayedCall(800, rajada);
   }
 
   // ----------------------------------------------------------------- telas
 
   telaPrincipal() {
-    // o logo HEAVY DOOM METAL (Assets/heavy/menu.png, já aparado e com 300 px de altura)
-    this.add.image(TELA_L / 2, 162, 'logo');
-    texto(this, TELA_L / 2, 330, `sobreviva a ${ONDAS.length} ondas e derrote o Spider Mastermind`, 18, COR.cinza);
+    // o logo HEAVY DOOM METAL (Assets/heavy/menu.png, já aparado e com 300 px de altura), piscando
+    this.piscarLogo(this.add.image(TELA_L / 2, 162, 'logo'));
+    texto(this, TELA_L / 2, 330, `sobreviva a ${ONDAS.length} ondas e derrote o Eddie 80`, 18, COR.cinza);
 
     new ListaDeBotoes(this, TELA_L / 2, 392, [
       { rotulo: 'NOVO JOGO', acao: () => this.iniciar() },

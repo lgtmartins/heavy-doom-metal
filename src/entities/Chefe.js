@@ -1,4 +1,4 @@
-// Chefão final: Spider Mastermind.
+// Chefão final: Eddie 80 (o slot do Spider Mastermind do jogo original).
 //
 // Ele é um inimigo comum para o resto do jogo (mesmo pool, leva dano igual); o
 // que muda é a "ia": um ciclo de padrões de ataque com uma pausa andando entre

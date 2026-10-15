@@ -288,7 +288,7 @@ export class CenaJogo extends Phaser.Scene {
   }
 
   aoNascerChefe() {
-    this.anunciar('SPIDER MASTERMIND', 'Derrote o chefão!');
+    this.anunciar('EDDIE 80', 'Derrote o chefão!');
     this.tremer(10);
     sons.tocar('chefeRugido');
   }

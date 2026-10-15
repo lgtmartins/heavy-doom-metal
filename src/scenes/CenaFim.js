@@ -22,7 +22,7 @@ export class CenaFim extends Phaser.Scene {
     this.add.rectangle(0, 0, TELA_L, TELA_A, this.vitoria ? 0x000000 : 0x300000, 0.72).setOrigin(0);
 
     texto(this, TELA_L / 2, 70, this.vitoria ? 'VOCÊ VENCEU!' : 'VOCÊ MORREU', 72, this.vitoria ? COR.amarelo : COR.vermelho);
-    texto(this, TELA_L / 2, 124, this.vitoria ? 'O Spider Mastermind foi destruído. O inferno vai pensar duas vezes.' : `Morto por: ${s.causaMorte || '?'}  ·  onda ${s.onda} de ${ONDAS.length}`, 20, COR.branco);
+    texto(this, TELA_L / 2, 124, this.vitoria ? 'O Eddie 80 foi destruído. O inferno vai pensar duas vezes.' : `Morto por: ${s.causaMorte || '?'}  ·  onda ${s.onda} de ${ONDAS.length}`, 20, COR.branco);
 
     const linhas = [
       ['Tempo', formatarTempo(s.tempo)],

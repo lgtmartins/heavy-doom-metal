@@ -23,6 +23,7 @@ export class CenaBoot extends Phaser.Scene {
     this.load.on('progress', (p) => { barra.width = 400 * p; });
     for (const nome of ATLAS) this.load.atlas(nome, `assets/${nome}.png`, `assets/${nome}.json`);
     this.load.image('logo', 'assets/logo.png');
+    this.load.image('fundoMenu', 'assets/fundo-menu.jpg');
     // Os sons são baixados como binário puro: quem os decodifica e toca é systems/Sons.js
     // (o áudio do Phaser está desligado em main.js).
     for (const nome of arquivosDeSom()) this.load.binary(`sfx-${slug(nome)}`, `assets/sfx/${slug(nome)}.wav`);
@@ -44,7 +45,7 @@ export class CenaBoot extends Phaser.Scene {
    */
   validarSprites() {
     const faltando = new Set();
-    const eNomeDeFrame = (s) => /^(lostsoul|banshee|ghoul|vassago|spider|blob|weapons|pickups|fx|hud|menu|sky|rosto|guitarra)_/.test(s);
+    const eNomeDeFrame = (s) => /^(lostsoul|banshee|ghoul|vassago|spider|blob|eddies|weapons|pickups|fx|hud|menu|sky|rosto|guitarra)_/.test(s);
     const varrer = (v) => {
       if (typeof v === 'string') { if (eNomeDeFrame(v) && !temQuadro(v)) faltando.add(v); }
       else if (Array.isArray(v)) v.forEach(varrer);

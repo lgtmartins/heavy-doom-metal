@@ -124,7 +124,7 @@ export class CenaHud extends Phaser.Scene {
     // barra do chefão
     this.chefe = this.add.container(cx, 34).setVisible(false);
     this.chefeBarra = this.add.rectangle(-298, 0, 596, 14, 0xd01010).setOrigin(0, 0.5);
-    this.chefeNome = texto(this, 0, -19, 'SPIDER MASTERMIND', 18, COR.branco);
+    this.chefeNome = texto(this, 0, -19, 'EDDIE 80', 18, COR.branco);
     this.chefe.add([this.add.rectangle(0, 0, 604, 20, 0x000000, 0.75).setStrokeStyle(2, 0x888888), this.chefeBarra, this.chefeNome]);
 
     // mensagens (canto superior esquerdo, como no Doom) e anúncios (centro)
@@ -205,7 +205,7 @@ export class CenaHud extends Phaser.Scene {
       this.chefeBarra.width = 596 * Math.max(0, chefe.vida / chefe.vidaMax);
       const furia = chefe.chefe && chefe.chefe.furia;
       this.chefeBarra.setFillStyle(furia ? 0xff7a00 : 0xd01010);
-      this.chefeNome.setText(furia ? 'SPIDER MASTERMIND — EM FÚRIA' : 'SPIDER MASTERMIND');
+      this.chefeNome.setText(furia ? 'EDDIE 80 — EM FÚRIA' : 'EDDIE 80');
     }
 
     // textos que somem

@@ -9,30 +9,40 @@
 //   sons       { ver, dor, morte, ataque }: nomes de data/sons.js. Sem `dor`/`morte`,
 //              usa os genéricos; `ver` toca quando o monstro nasce
 //
-// Só são usados os frames FRONTAIS de cada monstro: em primeira pessoa, quem está
-// te perseguindo está sempre de frente para você.
+// No Heavy Doom Metal os inimigos são cabeças do Eddie (atlas "eddies", gerado por
+// tools/gerar-heavy.ps1 a partir de Assets/heavy/inimigos). Só a Banshee ainda é do Doom.
+// Os nomes internos (blob, lostsoul, ghoul, vassago, spider) continuam os do jogo original
+// porque data/ondas.js e o chefão usam esses nomes; o que aparece na tela é o campo `nome`.
 
 const s = (atlas, ...chaves) => chaves.map(c => `${atlas}_${c}`);
 
+/** Os sprites de uma cabeça do Eddie: as poses geradas pelo tratamento de pixel art. */
+function eddie(qual, fpsMorrer = 9) {
+  const p = `eddies_${qual}`;
+  return {
+    andar: [`${p}_andar0`, `${p}_andar1`], fps: 3,
+    atacar: [`${p}_atacar0`, `${p}_atacar1`],
+    dor: [`${p}_dor`],
+    morrer: [0, 1, 2, 3, 4, 5].map(i => `${p}_morrer${i}`), fpsMorrer,
+  };
+}
+
 export const INIMIGOS = {
-  // Enxame básico: fraco, vem em bando e morde.
+  // Enxame básico (era o Blob): fraco, vem em bando e morde.
   blob: {
-    nome: 'Blob', ia: 'perseguidor', vida: 24, vel: 2.8, raio: 0.3, escala: 1.25, xp: 1,
+    nome: 'Eddie Book', ia: 'perseguidor', vida: 24, vel: 2.8, raio: 0.3, escala: 1, voa: 0.6, xp: 1,
     ataque: { dano: 7, alcance: 0.45, intervalo: 0.9 },
     chanceDor: 0,
-    sprites: { andar: s('blob', '1_0', '1_1', '1_2', '1_1'), fps: 6, morrer: s('fx', '2_2', '2_3', '2_4'), morrerBrilho: true },
+    sprites: eddie('book'),
     sons: { morte: 'gosma' },
     corRadar: 0xff3030d0,
   },
-  // Para, grita e se lança em linha reta. Dá para desviar de lado.
+  // Para, grita e se lança em linha reta (era o Lost Soul). Dá para desviar de lado.
   lostsoul: {
-    nome: 'Lost Soul', ia: 'investida', vida: 34, vel: 2.9, raio: 0.3, escala: 1, voa: 0.62, xp: 2,
+    nome: 'Eddie', ia: 'investida', vida: 34, vel: 2.9, raio: 0.32, escala: 1, voa: 0.65, xp: 2,
     investida: { dano: 14, vel: 12.5, alcance: 7.5, preparo: 0.5, duracao: 1.0, intervalo: 2.4 },
     chanceDor: 0.5,
-    sprites: {
-      andar: s('lostsoul', '0_0', '2_0'), fps: 6, atacar: s('lostsoul', '3_0', '4_0'), dor: s('lostsoul', '5_0'),
-      morrer: s('lostsoul', '6_0', '6_1', '6_2', '6_3', '6_4', '6_5'), brilho: true, morrerBrilho: true,
-    },
+    sprites: eddie('classico'),
     sons: { ataque: 'lostSoulAtaque', morte: 'lostSoulMorte' },
     corRadar: 0xff30a0ff,
   },
@@ -45,39 +55,31 @@ export const INIMIGOS = {
     sons: { ataque: 'bansheeGrito', dor: 'bansheeDor', morte: 'bansheeMorte' },
     corRadar: 0xff00d0ff,
   },
-  // Mantém distância, anda de lado e atira raios.
+  // Mantém distância, anda de lado e atira raios (era o Ghoul).
   ghoul: {
-    nome: 'Ghoul', ia: 'atirador', vida: 55, vel: 2.6, raio: 0.34, escala: 1.5, voa: 0.75, xp: 4,
+    nome: 'Eddie Powerslave', ia: 'atirador', vida: 55, vel: 2.6, raio: 0.36, escala: 1, voa: 0.75, xp: 4,
     tiro: { dano: 8, vel: 6.5, intervalo: 3.0, distMin: 4.5, distMax: 9, preparo: 0.45, projetil: 'raio' },
     chanceDor: 0.4,
-    sprites: {
-      andar: s('ghoul', '0_0', '0_1', '0_2', '0_1'), fps: 6, atacar: s('ghoul', '0_3', '0_4', '0_5', '0_6'), dor: s('ghoul', '0_8'),
-      morrer: s('ghoul', '5_0', '5_1', '5_2', '5_3', '5_4', '5_5', '5_6', '5_7'), cadaver: 'ghoul_5_7',
-    },
+    sprites: eddie('powerslave'),
     sons: { ver: 'ghoulVer', dor: 'ghoulDor', morte: 'ghoulMorte' },
     corRadar: 0xffffd060,
   },
-  // Tanque: lento, aguenta muito, lança 3 bolas de fogo que deixam o chão queimando.
+  // Tanque (era o Vassago): lento, aguenta muito, lança 3 bolas de fogo que deixam o chão queimando.
   vassago: {
-    nome: 'Vassago', ia: 'tanque', vida: 520, vel: 1.75, raio: 0.5, escala: 1.25, xp: 25, xpGrande: true,
+    nome: 'Eddie V2', ia: 'tanque', vida: 520, vel: 1.75, raio: 0.55, escala: 1, voa: 1.05, xp: 25, xpGrande: true,
     ataque: { dano: 26, alcance: 0.7, intervalo: 1.2 },
     tiro: { dano: 14, vel: 7, intervalo: 3.4, distMin: 0, distMax: 11, preparo: 0.55, projetil: 'fogo', quantidade: 3, leque: 0.3 },
     chanceDor: 0.12, empurraoMult: 0.25,
-    sprites: {
-      andar: s('vassago', '0_0', '1_0', '2_0', '3_0'), fps: 5, atacar: s('vassago', '4_0', '5_0', '6_0', '7_0'), dor: s('vassago', '8_0'),
-      morrer: Array.from({ length: 8 }, (_, i) => `vassago_morte_${i}`), cadaver: 'vassago_morte_7', morrerBrilho: true,
-    },
+    sprites: eddie('v2'),
     sons: { ver: 'vassagoVer', ataque: 'vassagoAtaque', dor: 'vassagoDor', morte: 'vassagoMorte' },
     corRadar: 0xff4060ff, radarGrande: true,
   },
-  // Chefão. Os padrões de ataque estão em entities/Chefe.js; os números, em data/chefe.js.
+  // Chefão (era o Spider Mastermind). Os padrões de ataque estão em entities/Chefe.js;
+  // os números, em data/chefe.js.
   spider: {
-    nome: 'Spider Mastermind', ia: 'chefe', vida: 24000, vel: 1.9, raio: 1.15, escala: 1.5, xp: 0,
+    nome: 'Eddie 80', ia: 'chefe', vida: 24000, vel: 1.9, raio: 1.15, escala: 1, voa: 1.55, xp: 0,
     chanceDor: 0, empurraoMult: 0, chefe: true,
-    sprites: {
-      andar: s('spider', '0_0', '1_0', '2_0', '1_0'), fps: 5, atacar: s('spider', '0_0'),
-      morrer: s('spider', '3_0', '3_1', '3_2', '3_3', '3_4', '4_0', '4_1', '4_2', '4_3', '4_4', '4_5'), fpsMorrer: 4, cadaver: 'spider_4_5',
-    },
+    sprites: eddie('80', 4),
     sons: { morte: 'chefeMorte' },
     corRadar: 0xffff40ff, radarGrande: true,
   },

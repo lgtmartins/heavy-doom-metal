@@ -5,6 +5,8 @@
 #   rosto.png + rosto.json        os 43 rostos do HUD, um frame por rosto (rosto_<linha>_<coluna>)
 #   guitarra.png + guitarra.json  a guitarra em primeira pessoa, o raio, o impacto e o ícone
 #   logo.png                      o logo do menu, aparado e reduzido
+#   fundo-menu.jpg                o fundo fixo do menu (catedrais), no tamanho da tela
+#   eddies.png + eddies.json      os inimigos (cabecas do Eddie), em pixel art com a paleta do Doom
 #
 # Roda só com o Windows (PowerShell + System.Drawing), sem Node nem Python:
 #   powershell -ExecutionPolicy Bypass -File tools\gerar-heavy.ps1
@@ -292,3 +294,201 @@ Desenhar $final $logo $x0 $y0 $lw $lh 0 0 $final.Width $final.Height
 $final.Save((Join-Path $saida 'logo.png'), [System.Drawing.Imaging.ImageFormat]::Png)
 "logo      {0}x{1}" -f $final.Width, $final.Height
 $final.Dispose(); $logo.Dispose()
+
+# ============================================================== 4. FUNDO DO MENU
+# A pintura das catedrais vira o fundo fixo do menu: reduzida para cobrir a tela inteira
+# (960x600) e recortada no excesso de cima e de baixo, sem distorcer.
+$L_TELA = 960; $A_TELA = 600
+$ALINHAR_Y = 0.35     # que parte da altura sobra: 0 = mostra o topo da pintura, 0.5 = o meio, 1 = a base
+$fundo = New-Object System.Drawing.Bitmap (Join-Path $origem 'fundo-menu.png')
+$esc = [Math]::Max($L_TELA / $fundo.Width, $A_TELA / $fundo.Height)
+$sw = $L_TELA / $esc; $sh = $A_TELA / $esc
+$sx = ($fundo.Width - $sw) / 2; $sy = ($fundo.Height - $sh) * $ALINHAR_Y
+$tela = Novo-Bitmap $L_TELA $A_TELA
+Desenhar $tela $fundo $sx $sy $sw $sh 0 0 $L_TELA $A_TELA
+# JPEG: e uma pintura, sem transparencia; fica bem menor que PNG
+$jpeg = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object { $_.MimeType -eq 'image/jpeg' }
+$par = New-Object System.Drawing.Imaging.EncoderParameters 1
+$par.Param[0] = New-Object System.Drawing.Imaging.EncoderParameter ([System.Drawing.Imaging.Encoder]::Quality), ([long]88)
+$tela.Save((Join-Path $saida 'fundo-menu.jpg'), $jpeg, $par)
+"fundo     {0}x{1}" -f $tela.Width, $tela.Height
+$tela.Dispose(); $fundo.Dispose()
+
+# ============================================================== 5. INIMIGOS (EDDIES)
+# As cabecas do Eddie (Assets/heavy/inimigos) sao ilustracoes em alta resolucao. Para
+# combinarem com os sprites do Doom passam por um "tratamento de pixel art":
+#   1. reducao: cada cabeca fica com a mesma densidade dos sprites do jogo
+#      (64 px por unidade do mundo), entao a altura em px e o tamanho dela no mundo
+#   2. paleta: cada pixel vira a cor mais proxima das 256 cores da paleta original do
+#      Doom (Assets/...Palette.png, a "Default"). E isso que da a cara de Doom
+#   3. borda seca: pixel meio transparente vira opaco ou some (sem borda borrada)
+# Cada imagem e uma pose so; as outras sao geradas a partir dela:
+#   andar0/1  normal e levemente achatada (balanco ao flutuar)
+#   atacar0/1 maior e avermelhada (o bote)
+#   dor       avermelhada
+#   morrer0-5 se desfazendo: pixels somem, escurecem e caem
+$EDDIES = @(
+  @{ nome = 'book'; arquivo = 'eddie_book.png'; altura = 52 },        # substitui o Blob
+  @{ nome = 'classico'; arquivo = 'eddie.png'; altura = 60 },         # substitui o Lost Soul
+  @{ nome = 'powerslave'; arquivo = 'eddie_powerslave.png'; altura = 64 }, # substitui o Ghoul
+  @{ nome = 'v2'; arquivo = 'eddie_v2.png'; altura = 104 },           # substitui o Vassago
+  @{ nome = '80'; arquivo = 'eddie_80.png'; altura = 166 }            # substitui o Spider Mastermind (chefao)
+)
+
+Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @"
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
+public static class PixelArt {
+  static byte[] Ler(Bitmap b, out int stride) {
+    BitmapData d = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+    stride = d.Stride; byte[] px = new byte[d.Stride * b.Height];
+    Marshal.Copy(d.Scan0, px, 0, px.Length); b.UnlockBits(d); return px;
+  }
+  static Bitmap Gravar(byte[] px, int w, int h) {
+    Bitmap b = new Bitmap(w, h, PixelFormat.Format32bppArgb);
+    BitmapData d = b.LockBits(new Rectangle(0, 0, w, h), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+    Marshal.Copy(px, 0, d.Scan0, px.Length); b.UnlockBits(d); return b;
+  }
+
+  // Le a paleta "Default" (grade 16x16 de quadrados de 8 px no canto da sheet).
+  public static int[] Paleta(Bitmap sheet, int x0, int y0) {
+    int[] cores = new int[256];
+    for (int j = 0; j < 16; j++) for (int i = 0; i < 16; i++) {
+      Color c = sheet.GetPixel(x0 + i * 8 + 4, y0 + j * 8 + 4);
+      cores[j * 16 + i] = (c.R << 16) | (c.G << 8) | c.B;
+    }
+    return cores;
+  }
+
+  // Apara a transparencia em volta e reduz para a altura pedida.
+  public static Bitmap Reduzir(Bitmap origem, int altura) {
+    int st; byte[] px = Ler(origem, out st);
+    int x0 = origem.Width, y0 = origem.Height, x1 = -1, y1 = -1;
+    for (int y = 0; y < origem.Height; y++) for (int x = 0; x < origem.Width; x++)
+      if (px[y * st + x * 4 + 3] > 40) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    int w = x1 - x0 + 1, h = y1 - y0 + 1;
+    int lw = Math.Max(1, (int)Math.Round(w * (double)altura / h));
+    Bitmap saida = new Bitmap(lw, altura, PixelFormat.Format32bppArgb);
+    using (Graphics g = Graphics.FromImage(saida)) {
+      g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+      g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+      g.CompositingMode = CompositingMode.SourceCopy;
+      g.DrawImage(origem, new Rectangle(0, 0, lw, altura), x0, y0, w, h, GraphicsUnit.Pixel);
+    }
+    return saida;
+  }
+
+  // Leva cada pixel para a cor mais proxima da paleta e deixa a borda seca.
+  // contraste > 1 e saturacao > 1 compensam o "lavado" que a reducao deixa.
+  public static Bitmap Paletizar(Bitmap origem, int[] paleta, float contraste, float saturacao) {
+    int st; byte[] px = Ler(origem, out st);
+    var cache = new Dictionary<int, int>();
+    for (int i = 0; i < px.Length; i += 4) {
+      if (px[i + 3] < 128) { px[i] = px[i + 1] = px[i + 2] = px[i + 3] = 0; continue; }
+      float b = px[i] / 255f, g = px[i + 1] / 255f, r = px[i + 2] / 255f;
+      float cinza = 0.3f * r + 0.59f * g + 0.11f * b;
+      r = cinza + (r - cinza) * saturacao; g = cinza + (g - cinza) * saturacao; b = cinza + (b - cinza) * saturacao;
+      r = (r - 0.5f) * contraste + 0.5f; g = (g - 0.5f) * contraste + 0.5f; b = (b - 0.5f) * contraste + 0.5f;
+      int R = Math.Max(0, Math.Min(255, (int)(r * 255))), G = Math.Max(0, Math.Min(255, (int)(g * 255))), B = Math.Max(0, Math.Min(255, (int)(b * 255)));
+      int chave = (R << 16) | (G << 8) | B, melhor;
+      if (!cache.TryGetValue(chave, out melhor)) {
+        int menor = int.MaxValue; melhor = 0;
+        foreach (int c in paleta) {
+          int dr = ((c >> 16) & 255) - R, dg = ((c >> 8) & 255) - G, db = (c & 255) - B;
+          int dist = 3 * dr * dr + 4 * dg * dg + 2 * db * db;   // verde pesa mais: o olho e mais sensivel a ele
+          if (dist < menor) { menor = dist; melhor = c; }
+        }
+        cache[chave] = melhor;
+      }
+      px[i] = (byte)(melhor & 255); px[i + 1] = (byte)((melhor >> 8) & 255); px[i + 2] = (byte)((melhor >> 16) & 255); px[i + 3] = 255;
+    }
+    return Gravar(px, origem.Width, origem.Height);
+  }
+
+  // Tinge na direcao do vermelho (0 = nada, 1 = vermelho puro) e repaletiza.
+  public static Bitmap Avermelhar(Bitmap origem, float forca, int[] paleta) {
+    int st; byte[] px = Ler(origem, out st);
+    for (int i = 0; i < px.Length; i += 4) {
+      if (px[i + 3] == 0) continue;
+      px[i] = (byte)(px[i] * (1 - forca)); px[i + 1] = (byte)(px[i + 1] * (1 - forca * 0.85f));
+      px[i + 2] = (byte)Math.Min(255, px[i + 2] + (255 - px[i + 2]) * forca * 0.5f);
+    }
+    Bitmap b = Gravar(px, origem.Width, origem.Height);
+    Bitmap p = Paletizar(b, paleta, 1f, 1f); b.Dispose(); return p;
+  }
+
+  // Redimensiona (sem suavizar) dentro de uma moldura do tamanho `w`x`h`, com a base alinhada.
+  public static Bitmap Escalar(Bitmap origem, float ex, float ey, int w, int h) {
+    int nw = (int)Math.Round(origem.Width * ex), nh = (int)Math.Round(origem.Height * ey);
+    Bitmap saida = new Bitmap(w, h, PixelFormat.Format32bppArgb);
+    using (Graphics g = Graphics.FromImage(saida)) {
+      g.InterpolationMode = InterpolationMode.NearestNeighbor; g.PixelOffsetMode = PixelOffsetMode.Half;
+      g.DrawImage(origem, new Rectangle((w - nw) / 2, (h - nh) / 2, nw, nh), 0, 0, origem.Width, origem.Height, GraphicsUnit.Pixel);
+    }
+    return saida;
+  }
+
+  // Morte: `etapa` de 1 a `total`. Pixels somem ao acaso, os que ficam escurecem e caem.
+  public static Bitmap Desfazer(Bitmap origem, int etapa, int total, int semente, int[] paleta) {
+    int st; byte[] px = Ler(origem, out st);
+    int w = origem.Width, h = origem.Height;
+    byte[] saida = new byte[px.Length];
+    Random rnd = new Random(semente);
+    float sumir = etapa / (float)(total + 1), escurecer = 1f - 0.6f * etapa / total;
+    for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) {
+      int i = y * st + x * 4;
+      double sorte = rnd.NextDouble();
+      if (px[i + 3] == 0 || sorte < sumir) continue;
+      int queda = (int)(etapa * etapa * 0.6 * (0.5 + rnd.NextDouble()));   // cai mais rapido a cada etapa
+      int ny = y + queda; if (ny >= h) continue;
+      int j = ny * st + x * 4;
+      saida[j] = (byte)(px[i] * escurecer * 0.6f); saida[j + 1] = (byte)(px[i + 1] * escurecer * 0.6f);
+      saida[j + 2] = (byte)Math.Min(255, px[i + 2] * escurecer + 30); saida[j + 3] = 255;
+    }
+    Bitmap b = Gravar(saida, w, h);
+    Bitmap p = Paletizar(b, paleta, 1f, 1f); b.Dispose(); return p;
+  }
+}
+"@
+
+# paleta Default do Doom: acha o canto da grade (abaixo do titulo "Default")
+$folha = New-Object System.Drawing.Bitmap (Join-Path $raiz 'Assets\MS-DOS - DOOM _ DOOM II - Miscellaneous - Palette.png')
+$py0 = 10; while ($folha.GetPixel(4, $py0).R -eq 0 -and $folha.GetPixel(4, $py0).G -eq 128) { $py0++ }
+$paleta = [PixelArt]::Paleta($folha, 0, $py0); $folha.Dispose()
+
+$frames = @(); $soltar = @(); $ax = 1; $ay = 1; $altLinha = 0; $LARGURA_MAX = 1024
+function Guardar($nome, $img) {
+  if ($script:ax + $img.Width + 1 -gt $LARGURA_MAX) { $script:ax = 1; $script:ay += $script:altLinha + 1; $script:altLinha = 0 }
+  $script:frames += @{ nome = $nome; x = $script:ax; y = $script:ay; w = $img.Width; h = $img.Height; img = $img; sx = 0; sy = 0; sw = $img.Width; sh = $img.Height }
+  $script:soltar += $img
+  $script:ax += $img.Width + 1
+  if ($img.Height -gt $script:altLinha) { $script:altLinha = $img.Height }
+}
+$semente = 7
+foreach ($e in $EDDIES) {
+  $orig = New-Object System.Drawing.Bitmap (Join-Path $origem "inimigos\$($e.arquivo)")
+  $reduzida = [PixelArt]::Reduzir($orig, $e.altura); $orig.Dispose()
+  $base = [PixelArt]::Paletizar($reduzida, $paleta, 1.12, 1.15); $reduzida.Dispose()
+  # moldura comum, com folga para a pose de ataque (112%), para a animacao nao "pular"
+  $mw = [Math]::Ceiling($base.Width * 1.14); $mh = [Math]::Ceiling($base.Height * 1.14)
+  $p = "eddies_$($e.nome)"
+  Guardar "${p}_andar0" ([PixelArt]::Escalar($base, 1, 1, $mw, $mh))
+  Guardar "${p}_andar1" ([PixelArt]::Escalar($base, 1.02, 0.96, $mw, $mh))
+  $verm = [PixelArt]::Avermelhar($base, 0.25, $paleta)
+  Guardar "${p}_atacar0" ([PixelArt]::Escalar($verm, 1.06, 1.06, $mw, $mh))
+  Guardar "${p}_atacar1" ([PixelArt]::Escalar($verm, 1.12, 1.12, $mw, $mh))
+  $verm.Dispose()
+  $dor = [PixelArt]::Avermelhar($base, 0.5, $paleta)
+  Guardar "${p}_dor" ([PixelArt]::Escalar($dor, 1, 1, $mw, $mh)); $dor.Dispose()
+  $quadro = [PixelArt]::Escalar($base, 1, 1, $mw, $mh)
+  for ($k = 1; $k -le 6; $k++) { Guardar "${p}_morrer$($k - 1)" ([PixelArt]::Desfazer($quadro, $k, 6, $semente + $k, $paleta)) }
+  $quadro.Dispose(); $base.Dispose(); $semente += 10
+}
+$atlas = Novo-Bitmap $LARGURA_MAX ($ay + $altLinha + 1)
+foreach ($f in $frames) { Desenhar $atlas $f.img 0 0 $f.w $f.h $f.x $f.y $f.w $f.h -PixelArt }
+Gravar-Atlas 'eddies' $atlas $frames
+$atlas.Dispose(); foreach ($i in $soltar) { $i.Dispose() }
