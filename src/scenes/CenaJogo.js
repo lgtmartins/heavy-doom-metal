@@ -36,7 +36,8 @@ export class CenaJogo extends Phaser.Scene {
     this.stats = { tempo: 0, abates: 0, onda: 0, nivel: 1, danoCausado: 0, danoSofrido: 0, danoPor: {}, causaMorte: '' };
     this.mapa = new Mapa();
     this.campo = new CampoDeFluxo(this.mapa);
-    this.rc = new Raycaster(this.mapa, this.registry.get('texturas'), quadro('sky_inferno'));
+    // céu: as nuvens roxas com o rosto do Eddie (Assets/heavy/purple_sky.png); o tile cobre meia volta, por isso 2 repetições
+    this.rc = new Raycaster(this.mapa, this.registry.get('texturas'), { ...quadro('cenario_ceu'), repeticoes: 2 });
     this.jogador = new Jogador(this);
     this.horda = new Horda(this);
     this.projeteis = new Projeteis(this);
@@ -85,7 +86,7 @@ export class CenaJogo extends Phaser.Scene {
     this.scene.launch('Hud', { jogo: this });
     sons.iniciar();
     sons.musica(true, false);
-    if (DEBUG) window.__doom = this;
+    if (DEBUG) { window.__doom = this; window.__sons = sons; }
   }
 
   registrarTeclas() {

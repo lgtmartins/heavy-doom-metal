@@ -9,8 +9,8 @@
 //   sons       { ver, dor, morte, ataque }: nomes de data/sons.js. Sem `dor`/`morte`,
 //              usa os genéricos; `ver` toca quando o monstro nasce
 //
-// No Heavy Doom Metal os inimigos são cabeças do Eddie (atlas "eddies", gerado por
-// tools/gerar-heavy.ps1 a partir de Assets/heavy/inimigos). Só a Banshee ainda é do Doom.
+// No Heavy Doom Metal os inimigos são cabeças do Eddie e o deathbat do Avenged Sevenfold
+// (atlas "eddies", gerado por tools/gerar-heavy.ps1 a partir de Assets/heavy/inimigos).
 // Os nomes internos (blob, lostsoul, ghoul, vassago, spider) continuam os do jogo original
 // porque data/ondas.js e o chefão usam esses nomes; o que aparece na tela é o campo `nome`.
 
@@ -46,12 +46,13 @@ export const INIMIGOS = {
     sons: { ataque: 'lostSoulAtaque', morte: 'lostSoulMorte' },
     corRadar: 0xff30a0ff,
   },
-  // Kamikaze: mais rápida que você. Mate de longe, porque ela explode.
+  // Kamikaze (era a Banshee): mais rápido que você. Mate de longe, porque ele explode.
+  // brilho: true = desenhado sem sombra da distância; preto como é, sumiria no escuro.
   banshee: {
-    nome: 'Banshee', ia: 'kamikaze', vida: 40, vel: 5.0, raio: 0.32, escala: 1.15, voa: 0.6, xp: 3,
+    nome: 'Deathbat', ia: 'kamikaze', vida: 40, vel: 5.0, raio: 0.32, escala: 1, voa: 0.6, xp: 3,
     explosao: { dano: 24, raio: 1.9, pavio: 0.38, gatilho: 1.15, danoInimigos: 45 },
     chanceDor: 0,
-    sprites: { andar: s('banshee', '0_0', '0_1', '0_2', '0_3'), fps: 8, morrer: s('banshee', '1_0', '1_1', '1_2', '1_3'), brilho: true, morrerBrilho: true },
+    sprites: { ...eddie('deathbat'), fps: 8, brilho: true },
     sons: { ataque: 'bansheeGrito', dor: 'bansheeDor', morte: 'bansheeMorte' },
     corRadar: 0xff00d0ff,
   },

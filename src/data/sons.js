@@ -1,6 +1,7 @@
-// Tabela de sons: nome usado no código -> arquivo WAV original do Doom.
+// Tabela de sons: nome usado no código -> arquivo WAV original do Doom (ou MP3 do Heavy).
 //
 //   arquivo    nome do WAV na pasta de efeitos (sem ".wav"). Uma lista = variações sorteadas.
+//              Um nome terminado em ".mp3" vem de Assets/heavy/sons (os sons próprios do Heavy).
 //   volume     0..1 (padrão 1)
 //   tom        velocidade de reprodução: < 1 deixa mais grave (padrão 1)
 //   variacao   sorteia o tom em ±esse valor a cada toque, para tiros repetidos não soarem idênticos
@@ -10,6 +11,7 @@
 // (é o caso de 'xp', 'dash' e 'vitoria', que não têm equivalente no pack).
 
 export const PASTA_ORIGEM = 'MS-DOS - DOOM _ DOOM II - Miscellaneous - Sound Effects (DOOM _ DOOM II _ Legacy of Rust)/SFX';
+export const PASTA_HEAVY = 'Assets/heavy/sons';
 
 export const SONS = {
   // ---- armas
@@ -29,7 +31,8 @@ export const SONS = {
   morte: { arquivo: 'player death' },
   item: { arquivo: 'item up' },
   poder: { arquivo: 'get powerup' },
-  nivel: { arquivo: 'secret', volume: 0.8 },
+  // subir de nível (abre as cartas): um dos dois riffs de guitarra, sorteado
+  nivel: { arquivo: ['eric-andre-guitar-riff.mp3', 'rokytshred.mp3'], volume: 0.9 },
 
   // ---- inimigos
   teleporte: { arquivo: 'teleport', volume: 0.6 },
@@ -67,5 +70,8 @@ export const SONS = {
 /** Transforma o nome do WAV num nome de arquivo simples para a web: "BFG explode" -> "bfg-explode". */
 export const slug = (nome) => nome.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-/** Lista, sem repetição, de todos os WAVs citados na tabela. */
+/** Nome do arquivo publicado em public/assets/sfx: "BFG explode" -> "bfg-explode.wav"; MP3 continua MP3. */
+export const arquivoWeb = (nome) => nome.endsWith('.mp3') ? `${slug(nome.slice(0, -4))}.mp3` : `${slug(nome)}.wav`;
+
+/** Lista, sem repetição, de todos os arquivos citados na tabela. */
 export const arquivosDeSom = () => [...new Set(Object.values(SONS).flatMap(s => [].concat(s.arquivo)))];

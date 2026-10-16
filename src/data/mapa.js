@@ -1,4 +1,4 @@
-// Definição da arena. Para mexer no cenário, edite BLOCOS e ZONAS_DE_PISO.
+// Definição da arena (a catedral). Para mexer no cenário, edite BLOCOS e ZONAS_DE_PISO.
 // Coordenadas em células; o valor `tipo` é o índice da textura (ver render/texturas.js).
 
 export const MAPA_L = 44;
@@ -6,26 +6,29 @@ export const MAPA_A = 44;
 
 export const INICIO_JOGADOR = { x: 22, y: 22, ang: -Math.PI / 2 };
 
-const PILAR = 2, FERRO = 3;
+// A arena do Heavy Doom Metal é a nave de uma catedral: duas fileiras de colunas formam
+// o corredor central (com tapete vermelho), o órgão fica no altar, ao norte, e há mais
+// dois órgãos nas laterais. O jogador começa no meio da nave, olhando para o altar.
+const COLUNA = 2, ORGAO = 3;
 
 /** Obstáculos internos: { x, y, l, a, tipo }. */
 export const BLOCOS = [
-  // 16 pilares 2x2 em grade, deixando corredores de 6 células
-  ...[7, 15, 27, 35].flatMap(x => [7, 15, 27, 35].map(y => ({ x, y, l: 2, a: 2, tipo: PILAR }))),
-  // quatro muros em volta do centro, para dar cobertura contra projéteis
-  { x: 19, y: 11, l: 6, a: 1, tipo: FERRO },
-  { x: 19, y: 32, l: 6, a: 1, tipo: FERRO },
-  { x: 11, y: 19, l: 1, a: 6, tipo: FERRO },
-  { x: 32, y: 19, l: 1, a: 6, tipo: FERRO },
-  // cantos em "L" perto das bordas
-  { x: 3, y: 21, l: 3, a: 1, tipo: FERRO }, { x: 38, y: 22, l: 3, a: 1, tipo: FERRO },
-  { x: 21, y: 3, l: 1, a: 3, tipo: FERRO }, { x: 22, y: 38, l: 1, a: 3, tipo: FERRO },
+  // as duas fileiras de colunas da nave (9 de cada lado, uma a cada 4 células)
+  ...[14, 29].flatMap(x => [6, 10, 14, 18, 22, 26, 30, 34, 38].map(y => ({ x, y, l: 1, a: 1, tipo: COLUNA }))),
+  // o órgão do altar, ao norte
+  { x: 18, y: 3, l: 8, a: 2, tipo: ORGAO },
+  // órgãos nas laterais (o transepto da catedral)
+  { x: 4, y: 21, l: 6, a: 1, tipo: ORGAO },
+  { x: 34, y: 21, l: 6, a: 1, tipo: ORGAO },
+  // colunas grossas nos cantos das naves laterais
+  { x: 6, y: 8, l: 2, a: 2, tipo: COLUNA }, { x: 36, y: 8, l: 2, a: 2, tipo: COLUNA },
+  { x: 6, y: 34, l: 2, a: 2, tipo: COLUNA }, { x: 36, y: 34, l: 2, a: 2, tipo: COLUNA },
 ];
 
-/** Zonas de piso: { x, y, l, a, tipo } (0 tech, 1 inferno, 2 alerta). Depois vêm as manchas de lava. */
+/** Zonas de piso: { x, y, l, a, tipo } (0 mármore, 1 laje gasta, 2 tapete). Antes delas o
+ * construtor espalha manchas de laje gasta, mais frequentes longe do centro. */
 export const ZONAS_DE_PISO = [
-  { x: 1, y: 21, l: 42, a: 2, tipo: 2 },
-  { x: 21, y: 1, l: 2, a: 42, tipo: 2 },
+  { x: 20, y: 5, l: 4, a: 38, tipo: 2 }, // o tapete vermelho da nave, do altar até o fundo
 ];
 
 /** Mapa em grade + as consultas de colisão usadas por todo o jogo. */
@@ -40,7 +43,7 @@ export class Mapa {
       for (let x = 0; x < this.l; x++) {
         const i = y * this.l + x;
         if (x === 0 || y === 0 || x === this.l - 1 || y === this.a - 1) this.paredes[i] = 1;
-        // manchas de rocha infernal: quanto mais longe do centro, mais o inferno tomou a base
+        // manchas de laje gasta: quanto mais longe do centro, mais gasto o piso da catedral
         const dx = x - this.l / 2, dy = y - this.a / 2;
         const onda = Math.sin(x * 0.55) + Math.cos(y * 0.47) + Math.sin((x + y) * 0.31);
         if (onda + Math.hypot(dx, dy) * 0.11 > 2.6) this.piso[i] = 1;

@@ -6,7 +6,8 @@
 #   guitarra.png + guitarra.json  a guitarra em primeira pessoa, o raio, o impacto e o ícone
 #   logo.png                      o logo do menu, aparado e reduzido
 #   fundo-menu.jpg                o fundo fixo do menu (catedrais), no tamanho da tela
-#   eddies.png + eddies.json      os inimigos (cabecas do Eddie), em pixel art com a paleta do Doom
+#   eddies.png + eddies.json      os inimigos (cabecas do Eddie e o deathbat), em pixel art com a paleta do Doom
+#   cenario.png + cenario.json    o ceu da arena (topo da pintura das catedrais)
 #
 # Roda só com o Windows (PowerShell + System.Drawing), sem Node nem Python:
 #   powershell -ExecutionPolicy Bypass -File tools\gerar-heavy.ps1
@@ -332,7 +333,8 @@ $EDDIES = @(
   @{ nome = 'classico'; arquivo = 'eddie.png'; altura = 60 },         # substitui o Lost Soul
   @{ nome = 'powerslave'; arquivo = 'eddie_powerslave.png'; altura = 64 }, # substitui o Ghoul
   @{ nome = 'v2'; arquivo = 'eddie_v2.png'; altura = 104 },           # substitui o Vassago
-  @{ nome = '80'; arquivo = 'eddie_80.png'; altura = 166 }            # substitui o Spider Mastermind (chefao)
+  @{ nome = '80'; arquivo = 'eddie_80.png'; altura = 166 },           # substitui o Spider Mastermind (chefao)
+  @{ nome = 'deathbat'; arquivo = 'avenged.png'; altura = 44 }        # deathbat do Avenged Sevenfold: substitui a Banshee
 )
 
 Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @"
@@ -362,6 +364,32 @@ public static class PixelArt {
       cores[j * 16 + i] = (c.R << 16) | (c.G << 8) | c.B;
     }
     return cores;
+  }
+
+  // Imagem com fundo branco opaco (o deathbat): apaga o branco que encosta na borda,
+  // espalhando a partir das bordas (flood fill). O branco DENTRO do desenho fica.
+  public static Bitmap TirarFundoBranco(Bitmap origem) {
+    int st; byte[] px = Ler(origem, out st);
+    int w = origem.Width, h = origem.Height;
+    bool[] visto = new bool[w * h];
+    var fila = new Queue<int>();
+    for (int x = 0; x < w; x++) { fila.Enqueue(x); fila.Enqueue((h - 1) * w + x); }
+    for (int y = 0; y < h; y++) { fila.Enqueue(y * w); fila.Enqueue(y * w + w - 1); }
+    while (fila.Count > 0) {
+      int p = fila.Dequeue();
+      if (visto[p]) continue;
+      visto[p] = true;
+      int i = (p / w) * st + (p % w) * 4;
+      bool claro = px[i + 3] < 20 || (px[i] > 200 && px[i + 1] > 200 && px[i + 2] > 200);
+      if (!claro) continue;
+      px[i + 3] = 0;
+      int x = p % w, y = p / w;
+      if (x > 0) fila.Enqueue(p - 1);
+      if (x < w - 1) fila.Enqueue(p + 1);
+      if (y > 0) fila.Enqueue(p - w);
+      if (y < h - 1) fila.Enqueue(p + w);
+    }
+    return Gravar(px, w, h);
   }
 
   // Apara a transparencia em volta e reduz para a altura pedida.
@@ -471,6 +499,9 @@ function Guardar($nome, $img) {
 $semente = 7
 foreach ($e in $EDDIES) {
   $orig = New-Object System.Drawing.Bitmap (Join-Path $origem "inimigos\$($e.arquivo)")
+  # fundo branco opaco no canto? entao o fundo precisa ser apagado antes
+  $canto = $orig.GetPixel(0, 0)
+  if ($canto.A -gt 200 -and $canto.R -gt 200 -and $canto.G -gt 200 -and $canto.B -gt 200) { $limpa = [PixelArt]::TirarFundoBranco($orig); $orig.Dispose(); $orig = $limpa }
   $reduzida = [PixelArt]::Reduzir($orig, $e.altura); $orig.Dispose()
   $base = [PixelArt]::Paletizar($reduzida, $paleta, 1.12, 1.15); $reduzida.Dispose()
   # moldura comum, com folga para a pose de ataque (112%), para a animacao nao "pular"
@@ -492,3 +523,77 @@ $atlas = Novo-Bitmap $LARGURA_MAX ($ay + $altLinha + 1)
 foreach ($f in $frames) { Desenhar $atlas $f.img 0 0 $f.w $f.h $f.x $f.y $f.w $f.h -PixelArt }
 Gravar-Atlas 'eddies' $atlas $frames
 $atlas.Dispose(); foreach ($i in $soltar) { $i.Dispose() }
+
+# ============================================================== 6. CEU DA ARENA
+# O ceu da arena e o Assets/heavy/purple_sky.png: nuvens roxas com o rosto do Eddie e rochas
+# embaixo. O raycaster desenha 1 px de textura por px de tela na vertical, encostando a base
+# da textura no horizonte, e so cabem ~84 linhas acima dele; na horizontal, 320 px a cada
+# 90 graus. Entao a imagem inteira e reduzida para CEU_A linhas (um pouco esticada na
+# largura) e vira o centro de um tile de 640 px (meia volta: o jogo repete 2 vezes). O resto
+# do tile sao as laterais da imagem, so nuvens e rochas, espelhadas em vai-e-volta; onde as
+# duas laterais se encontram (atras de quem olha para o rosto) elas se misturam aos poucos.
+$CEU_A = 88                 # altura da textura (o que passar de ~84 nunca aparece)
+$CEU_RECORTE = 60, 760      # linhas da imagem original usadas [de, ate]: do alto do rosto ao topo das rochas
+$CEU_ESTICA = 1.2           # quanto a largura e esticada em relacao a altura
+$CEU_ESTICA_LADOS = 2.2     # as laterais esticam mais, para o espelhamento quase nao se repetir
+$CEU_ROSTO = 0.31, 0.69     # onde o rosto comeca e termina, em fracao da largura da imagem
+
+Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @"
+using System;
+using System.Drawing;
+public static class CeuArte {
+  // centro = coluna do tile onde fica o meio da imagem; rostoIni/rostoFim = colunas de s
+  // onde o rosto comeca/termina; mistura = meia largura da emenda; passo = tamanho do degrau
+  // de cor (reduz a paleta, para combinar com a pixel art do resto do jogo)
+  public static Bitmap Panorama(Bitmap s, int largura, int centro, int rostoIni, int rostoFim,
+                                int mistura, double esticaLados, double brilho, int passo) {
+    int ws = s.Width, h = s.Height, x0 = centro - ws / 2, vao = largura - ws;
+    Bitmap saida = new Bitmap(largura + 2, h + 2);
+    for (int x = 0; x < largura; x++) {
+      int rel = ((x - x0) % largura + largura) % largura;
+      int colA, colB = -1; double t = 0;
+      if (rel < ws) colA = rel;
+      else {
+        int dDir = rel - ws, dEsq = largura - 1 - rel, meio = vao / 2;
+        colA = Direita((int)(dDir / esticaLados), ws, rostoFim); colB = Esquerda((int)(dEsq / esticaLados), rostoIni);
+        double u = (dDir - (meio - mistura)) / (2.0 * mistura);
+        t = u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u);
+      }
+      for (int y = 0; y < h; y++) {
+        Color a = s.GetPixel(colA, y);
+        double r = a.R, g = a.G, b = a.B;
+        if (colB >= 0 && t > 0) {
+          Color c = s.GetPixel(colB, y);
+          r += (c.R - r) * t; g += (c.G - g) * t; b += (c.B - b) * t;
+        }
+        saida.SetPixel(x + 1, y + 1, Color.FromArgb(255, Degrau(r * brilho, passo), Degrau(g * brilho, passo), Degrau(b * brilho, passo)));
+      }
+    }
+    return saida;
+  }
+  // lateral direita da imagem (so nuvens), indo e voltando a partir da borda direita
+  static int Direita(int d, int ws, int fim) {
+    int w = ws - fim, k = d / w, o = d % w;
+    return k % 2 == 0 ? ws - 1 - o : fim + o;
+  }
+  // lateral esquerda, indo e voltando a partir da borda esquerda
+  static int Esquerda(int d, int ini) {
+    int k = d / ini, o = d % ini;
+    return k % 2 == 0 ? o : ini - 1 - o;
+  }
+  static int Degrau(double v, int passo) {
+    int q = (int)Math.Round(v / passo) * passo;
+    return q < 0 ? 0 : q > 255 ? 255 : q;
+  }
+}
+"@
+
+$quadroCeu = New-Object System.Drawing.Bitmap (Join-Path $origem 'purple_sky.png')
+$alturaRecorte = $CEU_RECORTE[1] - $CEU_RECORTE[0]
+$larguraS = [Math]::Round($quadroCeu.Width * ($CEU_A / $alturaRecorte) * $CEU_ESTICA)
+$reduzido = Novo-Bitmap $larguraS $CEU_A
+Desenhar $reduzido $quadroCeu 0 $CEU_RECORTE[0] $quadroCeu.Width $alturaRecorte 0 0 $larguraS $CEU_A
+# o jogador comeca olhando para o norte (angulo -90 graus), que cai na coluna 320 do tile
+$ceu = [CeuArte]::Panorama($reduzido, 640, 320, [int]($larguraS * $CEU_ROSTO[0]), [int]($larguraS * $CEU_ROSTO[1]), 40, $CEU_ESTICA_LADOS, 0.92, 12)
+Gravar-Atlas 'cenario' $ceu @(@{ nome = 'cenario_ceu'; x = 1; y = 1; w = 640; h = $CEU_A })
+$ceu.Dispose(); $reduzido.Dispose(); $quadroCeu.Dispose()

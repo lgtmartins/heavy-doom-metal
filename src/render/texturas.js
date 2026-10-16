@@ -1,4 +1,4 @@
-// Texturas procedurais de parede e chão.
+// Texturas procedurais de parede e chão (no Heavy Doom Metal: a catedral, no fim do arquivo).
 //
 // O pack de assets não tem nenhuma textura de cenário, então elas são geradas por
 // código no carregamento: paredes de 64x128 e pisos de 64x64, no clima "base
@@ -156,10 +156,125 @@ function pisoAlerta() {
   });
 }
 
+// ------------------------------------------------- cenário da catedral (Heavy Doom Metal)
+// O Heavy Doom Metal se passa numa catedral gótica tomada pelo metal: paredes de
+// pedra com vitrais, colunas, tubos de órgão, mármore xadrez e um tapete vermelho.
+// As texturas da base tecnológica acima continuam no arquivo, mas não são usadas.
+
+/** Parede externa: blocos de pedra fria com um vitral gótico (arco pontudo) no meio. */
+function paredeCatedral() {
+  const rnd = aleatorio(61), ruido = criarRuido(62, 8, 64);
+  const grao = Array.from({ length: 64 * 128 }, () => rnd());
+  // cores do vitral: cada "caco" de vidro pega uma delas
+  const vidros = [[190, 30, 40], [40, 60, 190], [140, 40, 170], [220, 170, 40], [40, 140, 90]];
+  return gerar(64, 128, (x, y) => {
+    const fileira = y >> 4;
+    const bx = (x + (fileira & 1) * 16) % 32, by = y % 16;
+    let v = 72 + ruido(x, y % 64) * 40 + grao[y * 64 + x] * 12;
+    v *= 0.9 + ((fileira * 29 + ((x + (fileira & 1) * 16) >> 5) * 53) % 5) * 0.04; // tom por bloco
+    if (bx === 0 || by === 0) v *= 0.4;
+    else if (bx === 1 || by === 1) v *= 1.15;
+    // vitral: retângulo de x 18..45 e y 30..100, com o topo em arco pontudo (dois arcos de círculo)
+    const cx = x - 31.5, dentroArco = y >= 30 && y < 100 && Math.abs(cx) < 14
+      && (y >= 48 || (Math.hypot(Math.abs(cx) + 8, y - 48) < 22));
+    if (dentroArco) {
+      // moldura de chumbo e caixilhos
+      if (Math.abs(cx) > 12.5 || y >= 98 || Math.abs(cx) < 0.8 || (y % 14 === 0)) return rgb(18, 16, 22);
+      // cacos irregulares: cada célula 6x7 ganha uma cor, com veios de chumbo entre elas
+      const celula = ((Math.floor((x + (y >> 3)) / 6) * 7 + Math.floor(y / 7) * 3) % vidros.length + vidros.length) % vidros.length;
+      if ((x + (y >> 3)) % 6 === 0 || y % 7 === 0) return rgb(25, 20, 30);
+      const c = vidros[celula], brilho = 0.75 + grao[y * 64 + x] * 0.35;
+      return rgb(c[0] * brilho, c[1] * brilho, c[2] * brilho);
+    }
+    // contorno de pedra lavrada em volta do vitral
+    if (y >= 26 && y < 104 && Math.abs(cx) < 17 && (y >= 44 || Math.hypot(Math.abs(cx) + 8, y - 48) < 26)) v *= 1.25;
+    return rgb(v * 0.82, v * 0.8, v * 0.92);
+  });
+}
+
+/** Coluna gótica: pedra clara com caneluras (frisos verticais), capitel e base. */
+function colunaGotica() {
+  const rnd = aleatorio(71), ruido = criarRuido(72, 6, 64);
+  const grao = Array.from({ length: 64 * 128 }, () => rnd());
+  return gerar(64, 128, (x, y) => {
+    let v = 105 + ruido(x, y % 64) * 30 + grao[y * 64 + x] * 10;
+    // caneluras: sombra e luz alternadas a cada 8 px, como um cilindro frisado
+    const f = x % 8;
+    v *= f === 0 ? 0.55 : f === 1 ? 0.75 : f === 6 ? 1.15 : 1;
+    v *= 0.8 + Math.sin((x / 64) * Math.PI) * 0.3;          // mais claro no meio, como um volume redondo
+    if (y < 14) { v = 80 + grao[y * 64 + x] * 20; if (y % 5 === 0) v *= 0.5; }      // capitel com molduras
+    if (y >= 116) { v = 70 + grao[y * 64 + x] * 15; if (y === 116 || y === 122) v *= 0.5; } // base
+    return rgb(v * 0.95, v * 0.9, v * 0.85);
+  });
+}
+
+/** Muro interno: tubos de órgão de metal sobre madeira escura. */
+function paredeOrgao() {
+  const rnd = aleatorio(81);
+  const grao = Array.from({ length: 64 * 128 }, () => rnd());
+  // 8 tubos de 8 px; a altura de cada um forma a "escadinha" típica do órgão
+  const topos = [30, 22, 14, 8, 8, 14, 22, 30];
+  return gerar(64, 128, (x, y) => {
+    const tubo = x >> 3, px = x % 8, topo = topos[tubo];
+    if (y >= topo && y < 112 && px > 0 && px < 7) {
+      // cilindro metálico: brilho forte numa faixa, escurecendo nas bordas
+      const luz = [0, 0.55, 0.85, 1.25, 1, 0.75, 0.5, 0][px];
+      let v = 150 * luz + grao[y * 64 + x] * 15;
+      const boca = y >= topo + 50 && y < topo + 58 && px > 1 && px < 6;   // a "boca" do tubo
+      if (boca) v *= 0.25;
+      if (y === topo || y === topo + 1) v *= 1.3;                         // aro no topo
+      const dourado = tubo % 2 === 0;
+      return dourado ? rgb(v * 1.05, v * 0.85, v * 0.45) : rgb(v * 0.9, v * 0.9, v * 0.95);
+    }
+    // madeira escura com veios
+    let v = 40 + grao[y * 64 + x] * 12 + Math.sin(y * 0.35 + x * 0.05) * 6;
+    if (y >= 112) { v *= 1.3; if (y === 112 || y === 126) v *= 0.5; }    // rodapé de madeira
+    return rgb(v * 1.2, v * 0.75, v * 0.5);
+  });
+}
+
+/** Piso: mármore em xadrez, casas pretas e vinho, com veios claros. */
+function pisoMarmore() {
+  const rnd = aleatorio(91), veio = criarRuido(92, 5, 64);
+  const grao = Array.from({ length: 64 * 64 }, () => rnd());
+  return gerar(64, 64, (x, y) => {
+    const escura = ((x >> 5) + (y >> 5)) & 1;
+    let v = (escura ? 34 : 70) + grao[y * 64 + x] * 8;
+    if (Math.abs(veio(x, y) - 0.5) < 0.02) v += 40;                      // veio do mármore
+    if (x % 32 === 0 || y % 32 === 0) v *= 0.6;                           // junta
+    return escura ? rgb(v * 0.9, v * 0.85, v * 0.95) : rgb(v * 1.25, v * 0.45, v * 0.45);
+  });
+}
+
+/** Piso: lajes de pedra gasta (perto das paredes, longe do centro). */
+function pisoLaje() {
+  const rnd = aleatorio(101), ruido = criarRuido(102, 8, 64);
+  const grao = Array.from({ length: 64 * 64 }, () => rnd());
+  return gerar(64, 64, (x, y) => {
+    let v = 45 + ruido(x, y) * 35 + grao[y * 64 + x] * 12;
+    const lx = (x + ((y >> 4) & 1) * 16) % 32, ly = y % 16;
+    if (lx === 0 || ly === 0) v *= 0.45;
+    return rgb(v * 0.85, v * 0.82, v * 0.9);
+  });
+}
+
+/** Piso: tapete vermelho com barra dourada (o corredor central da nave). */
+function pisoTapete() {
+  const rnd = aleatorio(111);
+  const grao = Array.from({ length: 64 * 64 }, () => rnd());
+  return gerar(64, 64, (x, y) => {
+    const v = 0.85 + grao[y * 64 + x] * 0.2;
+    if (x < 4 || x >= 60) return rgb(200 * v, 150 * v, 40 * v);             // barra dourada
+    if (x < 6 || x >= 58) return rgb(60 * v, 10 * v, 10 * v);
+    const motivo = ((x + y) % 16 === 0 || (x - y + 64) % 16 === 0) ? 0.7 : 1; // losangos discretos
+    return rgb(150 * v * motivo, 18 * v * motivo, 24 * v * motivo);
+  });
+}
+
 export function criarTexturas() {
   return {
     // índice = valor da célula no mapa (0 = vazio)
-    paredes: [null, paredeBase(), paredePilar(), paredeFerro()],
-    pisos: [pisoTech(), pisoInferno(), pisoAlerta()],
+    paredes: [null, paredeCatedral(), colunaGotica(), paredeOrgao()],
+    pisos: [pisoMarmore(), pisoLaje(), pisoTapete()],
   };
 }

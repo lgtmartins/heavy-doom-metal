@@ -81,7 +81,7 @@ try {
   await foto('menu');
   await conferir('menu', 'Menu');
   // as duas telas internas do menu: entra, fotografa e volta com ESC
-  for (const [descidas, nome] of [[1, 'como-jogar'], [2, 'records']]) {
+  for (const [descidas, nome] of [[1, 'como-jogar'], [2, 'records'], [3, 'creditos']]) {
     await espera(450);
     for (let i = 0; i < descidas; i++) { await pagina.keyboard.press('ArrowDown'); await espera(60); }
     await pagina.keyboard.press('Enter');
@@ -104,6 +104,10 @@ try {
     await pagina.keyboard.up('w');
     await foto('jogo');
     console.log('estado', JSON.stringify(await estado()));
+    // os riffs do level-up são MP3 (os outros sons são WAV): confere se decodificaram
+    const riffs = await pagina.evaluate(() => ['eric-andre-guitar-riff.mp3', 'rokytshred.mp3']
+      .map(n => `${n}: ${window.__sons?.amostras[n] ? window.__sons.amostras[n].duration.toFixed(1) + 's' : 'NÃO decodificado'}`));
+    console.log('riffs', riffs.join('  ·  '));
   }
 
   if (cenario === 'telas') {

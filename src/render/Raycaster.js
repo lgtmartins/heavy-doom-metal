@@ -84,7 +84,8 @@ export class Raycaster {
 
     // ---- 1. céu: a textura dá 4 voltas em 360 graus, igual ao Doom
     const ceu = this.ceu;
-    const voltas = (ceu.w * 4) / (Math.PI * 2);
+    // quantas vezes a textura do céu se repete numa volta completa (o céu do Doom: 4)
+    const voltas = (ceu.w * (ceu.repeticoes || 4)) / (Math.PI * 2);
     const yCeu = Math.min(hz, H);
     for (let x = 0; x < W; x++) {
       let tx = Math.floor((camera.ang + this.angColuna[x]) * voltas) % ceu.w;

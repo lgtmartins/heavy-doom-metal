@@ -17,8 +17,8 @@ export class CenaFim extends Phaser.Scene {
     const s = this.stats;
     const { recorde, novo } = salvarRecorde(s, this.vitoria);
 
-    const ampliacao = TELA_A / 128;
-    this.add.tileSprite(0, 0, Math.ceil(TELA_L / ampliacao), 128, 'skies', this.vitoria ? 'sky_nuvens' : 'sky_inferno').setOrigin(0).setScale(ampliacao);
+    // fundo: a mesma pintura das catedrais do menu, escurecida (mais vermelha na derrota)
+    this.add.image(0, 0, 'fundoMenu').setOrigin(0);
     this.add.rectangle(0, 0, TELA_L, TELA_A, this.vitoria ? 0x000000 : 0x300000, 0.72).setOrigin(0);
 
     texto(this, TELA_L / 2, 70, this.vitoria ? 'VOCÊ VENCEU!' : 'VOCÊ MORREU', 72, this.vitoria ? COR.amarelo : COR.vermelho);

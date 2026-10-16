@@ -1,7 +1,7 @@
 # Heavy Doom Metal
 
 Survival roguelike em **primeira pessoa**: um roqueiro, uma guitarra que invoca raios e 10 ondas de
-demônios do DOOM numa arena. Suba de nível escolhendo upgrades e derrote o Spider Mastermind.
+Eddies numa catedral gótica. Suba de nível escolhendo upgrades e derrote o Eddie 80.
 
 Nasceu como cópia do *DOOM Survivors* (pasta `JOGOS`), que continua intacto. A arte própria deste
 jogo fica em `Assets/heavy/` (rostos do HUD, logo do menu e a guitarra) e é preparada por
@@ -53,7 +53,7 @@ O build usa caminhos relativos: a pasta `dist/` pode ser publicada em qualquer h
   **Megasphere** (puxa todo o XP do mapa).
 - O **radar** no canto superior direito mostra quem vem pelas costas. As faixas vermelhas nas bordas
   mostram de que lado veio o golpe.
-- Depois da onda 10 vem o **Spider Mastermind**: rajada de metralhadora (corra de lado ou use um pilar),
+- Depois da onda 10 vem o **Eddie 80**: rajada de metralhadora (corra de lado ou use um pilar),
   anéis de orbes (passe pelos vãos) e reforços. Abaixo de 50% de vida ele entra em **fúria**.
 - O recorde fica salvo no navegador.
 
@@ -61,11 +61,11 @@ O build usa caminhos relativos: a pasta `dist/` pode ser publicada em qualquer h
 
 | Inimigo | Comportamento |
 |---|---|
-| **Blob** | fraco, vem em enxame e morde |
-| **Lost Soul** | para, grita e se lança em linha reta — desvie de lado |
-| **Banshee** | mais rápida que você; explode ao encostar. Mate de longe (ela leva as vizinhas junto) |
-| **Ghoul** | mantém distância e atira raios |
-| **Vassago** | tanque: bolas de fogo que deixam o chão queimando |
+| **Eddie Book** | fraco, vem em enxame e morde |
+| **Eddie** | para, grita e se lança em linha reta — desvie de lado |
+| **Deathbat** | mais rápido que você; explode ao encostar. Mate de longe (ele leva os vizinhos junto) |
+| **Eddie Powerslave** | mantém distância e atira raios |
+| **Eddie V2** | tanque: bolas de fogo que deixam o chão queimando |
 
 ## Estrutura do código
 
@@ -122,12 +122,19 @@ Acrescentar `?debug` à URL liga atalhos de teste: **K** mata todos, **N** próx
 
 ## Créditos
 
-- **Sprites e gráficos**: © **id Software** / Bethesda — *DOOM*, *DOOM II* e *Legacy of Rust*.
-- **Rips**, via [The Spriters Resource](https://www.spriters-resource.com/): Dolphman (Lost Soul, armas,
+Os créditos também aparecem dentro do jogo, na opção **CRÉDITOS** do menu principal.
+
+- **Desenvolvimento**: Luiz Guilherme Tiritan Martins.
+- **Inimigos**: Eddie, mascote do Iron Maiden; Deathbat, mascote do Avenged Sevenfold.
+- **Arte adicional** (rosto do roqueiro, guitarra, logo, pintura do menu e céu da arena): imagens reunidas pelo autor.
+- **Sprites, itens e HUD**: © **id Software** / Bethesda — *DOOM*, *DOOM II* e *Legacy of Rust*.
+- **Origem das sheets**: [The Spriters Resource — DOOM / DOOM II (MS-DOS)](https://www.spriters-resource.com/ms_dos/doomdoomii/).
+- **Rips**: Dolphman (Lost Soul, armas,
   rosto do HUD), Planz Doom (Vassago), MG12 (Spider Mastermind e Blob do id Vault), PGE (Ghoul),
   DaColGy, 16-Bit Globe e SuperDave938 (efeitos, menu e HUD).
-- **Efeitos sonoros**: © id Software — rips de Nai255 e InfamousLazure (Legacy of Rust).
-- **Texturas de cenário e música**: geradas por código neste projeto.
+- **Efeitos sonoros**: © id Software — rips de Nai255 e InfamousLazure (Legacy of Rust). Os dois riffs de
+  guitarra do level-up (`Assets/heavy/sons`) foram fornecidos pelo autor.
+- **Texturas da catedral e música**: geradas por código neste projeto.
 - **Engine**: [Phaser 3](https://phaser.io) (MIT). **Build**: [Vite](https://vitejs.dev).
 
 Projeto acadêmico, sem fins lucrativos. DOOM é marca registrada da id Software LLC; este projeto não

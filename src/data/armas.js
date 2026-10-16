@@ -124,6 +124,6 @@ export const ORDEM_ARMAS = ['pistola', 'shotgun', 'chaingun', 'foguete', 'plasma
 export const NIVEL_MAX_ARMA = 4;
 
 // Botão geral de poder de fogo: multiplica o dano de TODOS os raios de uma vez.
-// 1 = os valores da tabela acima; 1.4 = 40% mais forte. É o jeito rápido de
-// deixar o jogo mais fácil ou mais difícil sem mexer raio por raio.
-export const PODER_DE_FOGO = 1.4;
+// 1 = os valores da tabela acima; 2 = o dobro. É o jeito rápido de deixar o jogo
+// mais fácil ou mais difícil sem mexer raio por raio.
+export const PODER_DE_FOGO = 2;

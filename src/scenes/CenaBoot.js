@@ -9,7 +9,7 @@ import { INIMIGOS, PROJETEIS_INIMIGOS, EFEITOS } from '../data/inimigos.js';
 import { ITENS } from '../data/itens.js';
 import { UPGRADES, CARTA_RESERVA } from '../data/upgrades.js';
 import { ROSTO } from '../data/rosto.js';
-import { arquivosDeSom, slug } from '../data/sons.js';
+import { arquivosDeSom, arquivoWeb, slug } from '../data/sons.js';
 import { sons } from '../systems/Sons.js';
 import { texto } from './ui.js';
 
@@ -26,7 +26,7 @@ export class CenaBoot extends Phaser.Scene {
     this.load.image('fundoMenu', 'assets/fundo-menu.jpg');
     // Os sons são baixados como binário puro: quem os decodifica e toca é systems/Sons.js
     // (o áudio do Phaser está desligado em main.js).
-    for (const nome of arquivosDeSom()) this.load.binary(`sfx-${slug(nome)}`, `assets/sfx/${slug(nome)}.wav`);
+    for (const nome of arquivosDeSom()) this.load.binary(`sfx-${slug(nome)}`, `assets/sfx/${arquivoWeb(nome)}`);
   }
 
   create() {
@@ -45,7 +45,7 @@ export class CenaBoot extends Phaser.Scene {
    */
   validarSprites() {
     const faltando = new Set();
-    const eNomeDeFrame = (s) => /^(lostsoul|banshee|ghoul|vassago|spider|blob|eddies|weapons|pickups|fx|hud|menu|sky|rosto|guitarra)_/.test(s);
+    const eNomeDeFrame = (s) => /^(lostsoul|banshee|ghoul|vassago|spider|blob|eddies|cenario|weapons|pickups|fx|hud|menu|sky|rosto|guitarra)_/.test(s);
     const varrer = (v) => {
       if (typeof v === 'string') { if (eNomeDeFrame(v) && !temQuadro(v)) faltando.add(v); }
       else if (Array.isArray(v)) v.forEach(varrer);

@@ -15,7 +15,7 @@ export const ALTURA_PAREDE = 2;     // paredes de 128 px, como no Doom
 export const ALTURA_OLHO = 0.64;    // 41 px, a altura da câmera do Doom
 export const FOV = Math.PI / 2;     // 90 graus
 
-export const ATLAS = ['banshee', 'eddies',
+export const ATLAS = ['eddies', 'cenario',
   'weapons', 'pickups', 'fx', 'hud', 'menu', 'skies',
   'rosto', 'guitarra']; // arte própria do Heavy Doom Metal (gerada por tools/gerar-heavy.ps1)
 

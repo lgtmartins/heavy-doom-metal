@@ -1,6 +1,6 @@
-// Menu inicial, com três telas: principal, "como jogar" e recordes.
+// Menu inicial, com quatro telas: principal, "como jogar", recordes e créditos.
 //
-// As três são a MESMA cena. Trocar de tela é reiniciar a cena passando qual tela
+// Todas são a MESMA cena. Trocar de tela é reiniciar a cena passando qual tela
 // mostrar (scene.restart({ tela })): o Phaser limpa objetos e teclas da tela
 // anterior sozinho, então não há nada para esconder/mostrar à mão.
 import Phaser from 'phaser';
@@ -20,10 +20,13 @@ const CONTROLES = [
   ['ESC / P', 'pausa   ·   M: som'],
 ];
 
+const AUTOR = 'Luiz Guilherme Tiritan Martins';
+const URL_SPRITES = 'https://www.spriters-resource.com/ms_dos/doomdoomii/';
+
 const DICAS = [
   'Recolha as poções azuis: são o XP. A cada nível você escolhe 1 de 3 upgrades.',
   'O radar (canto superior direito) mostra quem vem pelas costas.',
-  'Banshees explodem: mate de longe. Ghouls atiram: são alvo prioritário.',
+  'Deathbats explodem: mate de longe. Eddies Powerslave atiram: são alvo prioritário.',
   'Use os pilares como cobertura contra a metralhadora do chefão.',
 ];
 
@@ -43,6 +46,7 @@ export class CenaMenu extends Phaser.Scene {
 
     if (this.tela === 'comoJogar') this.telaComoJogar();
     else if (this.tela === 'recordes') this.telaRecordes();
+    else if (this.tela === 'creditos') this.telaCreditos();
     else this.telaPrincipal();
   }
 
@@ -74,11 +78,40 @@ export class CenaMenu extends Phaser.Scene {
     this.piscarLogo(this.add.image(TELA_L / 2, 162, 'logo'));
     texto(this, TELA_L / 2, 330, `sobreviva a ${ONDAS.length} ondas e derrote o Eddie 80`, 18, COR.cinza);
 
-    new ListaDeBotoes(this, TELA_L / 2, 392, [
+    new ListaDeBotoes(this, TELA_L / 2, 384, [
       { rotulo: 'NOVO JOGO', acao: () => this.iniciar() },
       { rotulo: 'COMO JOGAR?', acao: () => this.scene.restart({ tela: 'comoJogar' }) },
       { rotulo: 'RECORDS', acao: () => this.scene.restart({ tela: 'recordes' }) },
-    ], { tamanho: 38, espaco: 58 });
+      { rotulo: 'CRÉDITOS', acao: () => this.scene.restart({ tela: 'creditos' }) },
+    ], { tamanho: 36, espaco: 52 });
+  }
+
+  telaCreditos() {
+    texto(this, TELA_L / 2, 48, 'CRÉDITOS', 50, COR.amarelo);
+    let y = 102;
+    // cada bloco: título amarelo e as linhas logo abaixo
+    const bloco = (titulo, linhas, cor = COR.branco) => {
+      texto(this, TELA_L / 2, y, titulo, 19, COR.amarelo);
+      y += 23;
+      for (const l of linhas) { texto(this, TELA_L / 2, y, l, 16, cor); y += 20; }
+      y += 9;
+    };
+    bloco('DESENVOLVIDO POR', [AUTOR, 'Disciplina de Jogos Digitais']);
+    bloco('INIMIGOS', ['Eddie: mascote do Iron Maiden  ·  Deathbat: mascote do Avenged Sevenfold']);
+    bloco('ARTE ADICIONAL', ['Rosto do roqueiro, guitarra, logo, pintura do menu e céu da arena: imagens reunidas pelo autor'], COR.cinza);
+    bloco('SPRITES, ITENS E HUD', ['© id Software / Bethesda  —  DOOM, DOOM II e Legacy of Rust']);
+    // o endereço é clicável: abre a página das sheets numa aba nova
+    texto(this, TELA_L / 2, y - 6, 'Sheets obtidas em The Spriters Resource:', 16, COR.branco);
+    // em Arial e com folga embaixo: na fonte Impact o "_" de ms_dos é cortado e some
+    const link = texto(this, TELA_L / 2, y + 15, URL_SPRITES.replace('https://', ''), 16, '#7fb2ff')
+      .setFontFamily('Arial, sans-serif').setFontStyle('bold').setPadding(0, 0, 0, 4)
+      .setInteractive({ useHandCursor: true });
+    link.on('pointerdown', () => window.open(URL_SPRITES, '_blank'));
+    y += 40;
+    bloco('RIPS DOS SPRITES', ['Dolphman  ·  Planz Doom  ·  MG12  ·  PGE  ·  DaColGy  ·  16-Bit Globe  ·  SuperDave938'], COR.cinza);
+    bloco('EFEITOS SONOROS', ['© id Software  —  rips de Nai255 e InfamousLazure  ·  riffs do level-up: fornecidos pelo autor'], COR.cinza);
+    bloco('TECNOLOGIA', ['Phaser 3 + Vite  ·  cenário da catedral e música gerados por código'], COR.cinza);
+    this.botaoVoltar(556);
   }
 
   telaComoJogar() {
@@ -117,9 +150,9 @@ export class CenaMenu extends Phaser.Scene {
     this.botaoVoltar();
   }
 
-  botaoVoltar() {
+  botaoVoltar(y = 530) {
     const voltar = () => this.scene.restart({ tela: 'principal' });
-    new ListaDeBotoes(this, TELA_L / 2, 530, [{ rotulo: 'VOLTAR', acao: voltar }], { tamanho: 34 });
+    new ListaDeBotoes(this, TELA_L / 2, y, [{ rotulo: 'VOLTAR', acao: voltar }], { tamanho: 34 });
     aoTecla(this, 'ESC', () => { sons.tocar('menu'); voltar(); });
   }
 
