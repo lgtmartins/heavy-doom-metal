@@ -8,6 +8,7 @@ import { CenaHud } from './scenes/CenaHud.js';
 import { CenaCartas } from './scenes/CenaCartas.js';
 import { CenaPausa } from './scenes/CenaPausa.js';
 import { CenaFim } from './scenes/CenaFim.js';
+import { CenaMusica } from './scenes/CenaMusica.js';
 
 // Não há bloco `physics` de propósito. O mundo do jogo é desenhado por um
 // raycaster (render/Raycaster.js) e as entidades são objetos simples num mapa em
@@ -22,7 +23,7 @@ const jogo = new Phaser.Game({
   pixelArt: true,                    // sem suavização: pixels nítidos ao ampliar
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   audio: { noAudio: true },          // o som é todo nosso (systems/Sons.js)
-  scene: [CenaBoot, CenaMenu, CenaJogo, CenaHud, CenaCartas, CenaPausa, CenaFim],
+  scene: [CenaBoot, CenaMenu, CenaJogo, CenaHud, CenaCartas, CenaPausa, CenaMusica, CenaFim],
 });
 
 if (DEBUG) window.__phaser = jogo; // usado pelo teste automatizado (tools/teste.mjs)

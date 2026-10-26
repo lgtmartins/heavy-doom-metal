@@ -8,6 +8,7 @@ import { TELA_L, TELA_A, COR } from '../config.js';
 import { lerRecorde, formatarTempo } from '../systems/Recorde.js';
 import { ONDAS } from '../data/ondas.js';
 import { sons } from '../systems/Sons.js';
+import { jukebox } from '../systems/Jukebox.js';
 import { texto, ListaDeBotoes, travarMouse, aoTecla } from './ui.js';
 
 const CONTROLES = [
@@ -17,7 +18,7 @@ const CONTROLES = [
   ['ESPAÇO', 'dash (fica invencível durante)'],
   ['1-5 / SCROLL', 'trocar de raio'],
   ['BOTÃO DIREITO', 'Solo Final (quando tiver)'],
-  ['ESC / P', 'pausa   ·   M: som'],
+  ['ESC / P', 'pausa (e a tela de MÚSICA)   ·   M: som'],
 ];
 
 const AUTOR = 'Luiz Guilherme Tiritan Martins';
@@ -48,6 +49,18 @@ export class CenaMenu extends Phaser.Scene {
     else if (this.tela === 'recordes') this.telaRecordes();
     else if (this.tela === 'creditos') this.telaCreditos();
     else this.telaPrincipal();
+
+    // música do menu (Dream Evil). O navegador só libera som depois do primeiro clique ou
+    // tecla; até lá o rodapé avisa
+    jukebox.menu();
+    this.txtMusica = texto(this, TELA_L / 2, TELA_A - 12, '', 14, COR.cinza);
+  }
+
+  update() {
+    const m = jukebox.atual;
+    this.txtMusica.setText(!jukebox.cfg.ligada ? ''
+      : jukebox.esperandoGesto ? '♪  clique ou aperte uma tecla para ligar o som'
+      : m ? `♪  ${m.artista}  —  ${m.titulo}` : '');
   }
 
   /**
@@ -88,13 +101,13 @@ export class CenaMenu extends Phaser.Scene {
 
   telaCreditos() {
     texto(this, TELA_L / 2, 48, 'CRÉDITOS', 50, COR.amarelo);
-    let y = 102;
+    let y = 96;
     // cada bloco: título amarelo e as linhas logo abaixo
     const bloco = (titulo, linhas, cor = COR.branco) => {
-      texto(this, TELA_L / 2, y, titulo, 19, COR.amarelo);
-      y += 23;
-      for (const l of linhas) { texto(this, TELA_L / 2, y, l, 16, cor); y += 20; }
-      y += 9;
+      texto(this, TELA_L / 2, y, titulo, 18, COR.amarelo);
+      y += 21;
+      for (const l of linhas) { texto(this, TELA_L / 2, y, l, 16, cor); y += 19; }
+      y += 5;
     };
     bloco('DESENVOLVIDO POR', [AUTOR, 'Disciplina de Jogos Digitais']);
     bloco('INIMIGOS', ['Eddie: mascote do Iron Maiden  ·  Deathbat: mascote do Avenged Sevenfold']);
@@ -107,11 +120,12 @@ export class CenaMenu extends Phaser.Scene {
       .setFontFamily('Arial, sans-serif').setFontStyle('bold').setPadding(0, 0, 0, 4)
       .setInteractive({ useHandCursor: true });
     link.on('pointerdown', () => window.open(URL_SPRITES, '_blank'));
-    y += 40;
+    y += 37;
     bloco('RIPS DOS SPRITES', ['Dolphman  ·  Planz Doom  ·  MG12  ·  PGE  ·  DaColGy  ·  16-Bit Globe  ·  SuperDave938'], COR.cinza);
-    bloco('EFEITOS SONOROS', ['© id Software  —  rips de Nai255 e InfamousLazure  ·  riffs do level-up: fornecidos pelo autor'], COR.cinza);
-    bloco('TECNOLOGIA', ['Phaser 3 + Vite  ·  cenário da catedral e música gerados por código'], COR.cinza);
-    this.botaoVoltar(556);
+    bloco('EFEITOS SONOROS', ['© id Software  —  rips de Nai255 e InfamousLazure  ·  choque dos raios e riffs do level-up: fornecidos pelo autor'], COR.cinza);
+    bloco('TRILHA SONORA', ['As músicas pertencem aos seus artistas: veja a lista em pausa > MÚSICA'], COR.cinza);
+    bloco('TECNOLOGIA', ['Phaser 3 + Vite  ·  texturas da catedral geradas por código'], COR.cinza);
+    this.botaoVoltar(554);
   }
 
   telaComoJogar() {
@@ -161,6 +175,10 @@ export class CenaMenu extends Phaser.Scene {
     this.saindo = true;
     sons.iniciar();
     travarMouse(this);
-    this.scene.start('Jogo');
+    // a música do menu some e a tela escurece juntas; o jogo entra clareando (CenaJogo)
+    const FADE = 1100;
+    jukebox.sairDoMenu(FADE);
+    this.cameras.main.fadeOut(FADE, 0, 0, 0);
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Jogo'));
   }
 }

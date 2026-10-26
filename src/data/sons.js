@@ -5,10 +5,12 @@
 //   volume     0..1 (padrão 1)
 //   tom        velocidade de reprodução: < 1 deixa mais grave (padrão 1)
 //   variacao   sorteia o tom em ±esse valor a cada toque, para tiros repetidos não soarem idênticos
+//   inicio     pula esse trecho do começo do arquivo, em s (silêncio inicial atrasa o som)
+//   duracao    corta o som depois desses segundos, com um fade curto (ausente = toca inteiro)
 //
 // `npm run sons` copia os arquivos citados aqui para public/assets/sfx/.
 // Um nome que não esteja nesta tabela cai no som sintetizado de systems/Sons.js
-// (é o caso de 'xp', 'dash' e 'vitoria', que não têm equivalente no pack).
+// (é o caso de 'xp', 'dash', 'vitoria' e 'soloFinal', que não têm equivalente no pack).
 
 export const PASTA_ORIGEM = 'MS-DOS - DOOM _ DOOM II - Miscellaneous - Sound Effects (DOOM _ DOOM II _ Legacy of Rust)/SFX';
 export const PASTA_HEAVY = 'Assets/heavy/sons';
@@ -25,6 +27,16 @@ export const SONS = {
   bfgExplosao: { arquivo: 'BFG explode' },
   trocar: { arquivo: 'weapon up', volume: 0.7 },
   negado: { arquivo: 'player umf', volume: 0.8 },
+
+  // ---- raios da guitarra: todos são o choque elétrico (Assets/heavy/sons/shock1.mp3),
+  // cada um num tom: quanto mais pesado o raio, mais grave e longo. Os de cadência alta
+  // (contínuo e tempestade) cortam cedo, senão 11 choques por segundo se empilham.
+  // O arquivo tem 3 s, com ~50 ms de silêncio no começo (por isso o inicio: 0.05).
+  raioAzul: { arquivo: 'shock1.mp3', inicio: 0.05, volume: 0.75, variacao: 0.05, duracao: 0.35 },
+  raioVerde: { arquivo: 'shock1.mp3', inicio: 0.05, volume: 0.9, tom: 0.8, variacao: 0.04, duracao: 0.5 },     // leque
+  raioAmarelo: { arquivo: 'shock1.mp3', inicio: 0.05, volume: 0.4, tom: 1.25, variacao: 0.08, duracao: 0.12 }, // contínuo
+  raioVermelho: { arquivo: 'shock1.mp3', inicio: 0.05, volume: 1, tom: 0.62, variacao: 0.03, duracao: 0.7 },   // explosivo
+  raioRoxo: { arquivo: 'shock1.mp3', inicio: 0.05, volume: 0.4, tom: 1.1, variacao: 0.08, duracao: 0.13 },     // tempestade
 
   // ---- jogador e itens
   ferido: { arquivo: 'player pain' },

@@ -6,6 +6,7 @@ import { ARMAS, ORDEM_ARMAS } from '../data/armas.js';
 import { ROSTO } from '../data/rosto.js';
 import { JOGADOR } from '../entities/Jogador.js';
 import { formatarTempo } from '../systems/Recorde.js';
+import { jukebox } from '../systems/Jukebox.js';
 import { texto } from './ui.js';
 
 const Y0 = VISTA_A * ESCALA;          // topo da barra (504)
@@ -30,6 +31,8 @@ export class CenaHud extends Phaser.Scene {
 
     this.montarBarra();
     this.montarVista();
+    this.montarTocandoAgora();
+    this.cameras.main.fadeIn(500);
 
     const ev = this.jogo.events;
     ev.on('mensagem', this.mostrarMensagem, this);
@@ -45,6 +48,30 @@ export class CenaHud extends Phaser.Scene {
   }
 
   // ------------------------------------------------------------- montagem
+
+  /**
+   * "Tocando agora", como no Tony Hawk's: a cada música nova o nome dela entra deslizando
+   * pela direita, logo acima da barra, fica uns segundos e some.
+   */
+  montarTocandoAgora() {
+    this.versaoMusica = -1;
+    this.txtMusica = texto(this, TELA_L + 10, Y0 - 20, '', 19, COR.amarelo, 1).setAlpha(0);
+  }
+
+  mostrarMusica() {
+    const m = jukebox.atual;
+    this.versaoMusica = jukebox.versao;
+    if (!m || !jukebox.cfg.ligada) return;
+    this.tweens.killTweensOf(this.txtMusica);
+    this.txtMusica.setText(`♪  ${m.artista}  —  ${m.titulo}`).setX(TELA_L + this.txtMusica.width).setAlpha(1);
+    this.tweens.chain({
+      targets: this.txtMusica,
+      tweens: [
+        { x: TELA_L - 14, duration: 450, ease: 'Cubic.easeOut' },
+        { alpha: 0, delay: 4200, duration: 700 },
+      ],
+    });
+  }
 
   montarBarra() {
     // fundo: o trecho de pedra da barra original, repetido
@@ -165,6 +192,9 @@ export class CenaHud extends Phaser.Scene {
   update(_t, delta) {
     const dt = delta / 1000;
     const jogo = this.jogo, jog = jogo.jogador, armas = jogo.armas, dir = jogo.diretor;
+    // com a pausa ou as cartas abertas o aviso some; uma música trocada ali aparece na volta
+    this.txtMusica.setVisible(!jogo.sobreposta);
+    if (jukebox.versao !== this.versaoMusica && !jogo.sobreposta) this.mostrarMusica();
 
     this.definirNumero(this.digVida, Math.ceil(jog.vida));
     this.definirNumero(this.digArmadura, Math.floor(jog.armadura));

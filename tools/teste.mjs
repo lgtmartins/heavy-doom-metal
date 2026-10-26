@@ -104,10 +104,24 @@ try {
     await pagina.keyboard.up('w');
     await foto('jogo');
     console.log('estado', JSON.stringify(await estado()));
-    // os riffs do level-up são MP3 (os outros sons são WAV): confere se decodificaram
-    const riffs = await pagina.evaluate(() => ['eric-andre-guitar-riff.mp3', 'rokytshred.mp3']
-      .map(n => `${n}: ${window.__sons?.amostras[n] ? window.__sons.amostras[n].duration.toFixed(1) + 's' : 'NÃO decodificado'}`));
-    console.log('riffs', riffs.join('  ·  '));
+    // os sons do Heavy são MP3 (os do Doom são WAV): confere se decodificaram e mostra a
+    // duração e onde o som de fato começa (silêncio no início atrasa o tiro)
+    const mp3 = await pagina.evaluate(() => ['eric-andre-guitar-riff.mp3', 'rokytshred.mp3', 'shock1.mp3'].map((n) => {
+      const b = window.__sons?.amostras[n];
+      if (!b) return `${n}: NÃO decodificado`;
+      const d = b.getChannelData(0);
+      let pico = 0;
+      for (let i = 0; i < d.length; i++) pico = Math.max(pico, Math.abs(d[i]));
+      let ini = 0;
+      while (ini < d.length && Math.abs(d[ini]) < pico * 0.05) ini++;
+      return `${n}: ${b.duration.toFixed(2)}s, começa em ${Math.round(ini / b.sampleRate * 1000)}ms`;
+    }));
+    console.log('mp3', mp3.join('  ·  '));
+    // a jukebox: a música da partida tem de ter sido sorteada (e não ser a do menu)
+    console.log('música', await pagina.evaluate(() => {
+      const j = window.__jukebox;
+      return j?.atual ? `${j.atual.artista} — ${j.atual.titulo} (${j.tocando ? 'tocando' : 'parada'}, ${j.tempo().atual.toFixed(1)}s)` : 'nenhuma';
+    }));
   }
 
   if (cenario === 'telas') {
@@ -125,6 +139,18 @@ try {
     await espera(400);
     await foto('pausa');
     await conferir('pausa', 'Hud,Pausa');
+    // ---- tela de música (pausa > MÚSICA) e volta para a pausa
+    await pagina.keyboard.press('ArrowDown');
+    await espera(80);
+    await pagina.keyboard.press('Enter');
+    await espera(500);
+    await pagina.keyboard.press('ArrowDown');
+    await espera(500);
+    await foto('musica');
+    await conferir('música', 'Hud,Musica');
+    await pagina.keyboard.press('Escape');
+    await espera(450);
+    await conferir('voltou da música', 'Hud,Pausa');
     await pagina.keyboard.press('p');
     await espera(300);
     await conferir('voltou da pausa', 'Jogo,Hud');

@@ -20,6 +20,7 @@ import { Diretor } from '../systems/Diretor.js';
 import { CampoDeFluxo } from '../systems/CampoDeFluxo.js';
 import { Entrada } from '../systems/Entrada.js';
 import { sons } from '../systems/Sons.js';
+import { jukebox } from '../systems/Jukebox.js';
 import { aoTecla } from './ui.js';
 
 const RADAR = { x: VISTA_L - 27, y: 27, raio: 23, alcance: 17 };
@@ -85,8 +86,9 @@ export class CenaJogo extends Phaser.Scene {
 
     this.scene.launch('Hud', { jogo: this });
     sons.iniciar();
-    sons.musica(true, false);
-    if (DEBUG) { window.__doom = this; window.__sons = sons; }
+    jukebox.partida(); // a música continua de uma partida para a outra
+    this.cameras.main.fadeIn(500);
+    if (DEBUG) { window.__doom = this; window.__sons = sons; window.__jukebox = jukebox; }
   }
 
   registrarTeclas() {
@@ -278,7 +280,6 @@ export class CenaJogo extends Phaser.Scene {
     this.tFim = 2.6;
     this.entrada.soltarTudo();
     sons.tocar('morte');
-    sons.musica(false);
     this.flashDano.alpha = 0.7;
   }
 
@@ -312,7 +313,6 @@ export class CenaJogo extends Phaser.Scene {
     this.anunciar('CHEFÃO DERROTADO', '');
     this.tremer(14);
     sons.tocar('explosao');
-    sons.musica(false);
   }
 
   fogosDaVitoria(dt) {
@@ -355,7 +355,6 @@ export class CenaJogo extends Phaser.Scene {
   encerrar() {
     this.sobreposta = true;
     this.entrada.destravar();
-    sons.musica(false);
     if (this.fim === 'vitoria') sons.tocar('vitoria');
     this.scene.stop('Hud');
     this.scene.start('Fim', { vitoria: this.fim === 'vitoria', stats: { ...this.stats, nivel: this.jogador.nivel } });

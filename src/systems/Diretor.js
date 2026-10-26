@@ -74,7 +74,6 @@ export class Diretor {
     this.t = 0;
     this.jogo.anunciar('ALGO GRANDE SE APROXIMA', 'Prepare-se');
     sons.tocar('chefeRugido');
-    sons.musica(true, true);
   }
 
   nascerChefe() {

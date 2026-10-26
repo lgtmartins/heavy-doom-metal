@@ -37,8 +37,8 @@ O build usa caminhos relativos: a pasta `dist/` pode ser publicada em qualquer h
 | **Espaço** | dash: um arranque curto, invencível durante o movimento |
 | **1 – 5** ou **scroll** | trocar de raio |
 | **Clique direito** | Solo Final (a "ultimate"), quando tiver |
-| **ESC** ou **P** | pausa (a sensibilidade do mouse é ajustada ali) |
-| **M** | liga/desliga o som |
+| **ESC** ou **P** | pausa (a sensibilidade do mouse e a tela de **MÚSICA** ficam ali) |
+| **M** | liga/desliga o som (efeitos e música) |
 
 ## Como se joga
 
@@ -56,6 +56,39 @@ O build usa caminhos relativos: a pasta `dist/` pode ser publicada em qualquer h
 - Depois da onda 10 vem o **Eddie 80**: rajada de metralhadora (corra de lado ou use um pilar),
   anéis de orbes (passe pelos vãos) e reforços. Abaixo de 50% de vida ele entra em **fúria**.
 - O recorde fica salvo no navegador.
+
+### Trilha sonora
+
+Como no *Tony Hawk's Pro Skater*: no menu toca **Dream Evil — The Book of Heavy Metal**; ao clicar em
+NOVO JOGO ela some num fade junto com a tela e, na partida, as músicas tocam em ordem aleatória, com o
+nome de cada uma aparecendo no canto quando começa. Em **pausa > MÚSICA** dá para tocar qualquer faixa,
+pular para a próxima/anterior, ligar/desligar a música, mudar o volume da música e o dos efeitos,
+trocar entre aleatório e sequência e marcar/desmarcar quais músicas entram no aleatório. As escolhas
+ficam salvas no navegador.
+
+As faixas estão em `public/assets/musica` e a lista (artista, título, álbum, ano) em
+`src/data/musicas.js`; elas tocam em streaming, sem pesar no carregamento.
+
+| Artista | Música | Álbum |
+|---|---|---|
+| Arch Enemy | Nemesis | Doomsday Machine (2005) |
+| Cannibal Corpse | No Remorse | Gore Obsessed (2002) |
+| Disturbed | Stricken | Ten Thousand Fists (2005) |
+| Dream Evil | The Book of Heavy Metal | The Book of Heavy Metal (2004) |
+| Dying Fetus | One Shot, One Kill | Stop at Nothing (2003) |
+| Godsmack | I Stand Alone | Faceless (2003) |
+| Iron Maiden | The Number of the Beast | The Number of the Beast (1982) |
+| Iron Maiden | Wasted Years | Somewhere in Time (1986) |
+| Iron Maiden | 2 Minutes to Midnight (ao vivo) | Live After Death (1985) |
+| Judas Priest | Painkiller | Painkiller (1990) |
+| Lamb of God | Laid to Rest | Ashes of the Wake (2004) |
+| Metallica | Seek & Destroy | Kill 'Em All (1983) |
+| Napalm Death | When All Is Said and Done | Smear Campaign (2006) |
+| Ratos de Porão | Aids, Pop, Repressão (ao vivo) | RDP ao Vivo (1992) |
+| Sepultura | Polícia (ao vivo) | ao vivo (1994) |
+| Sepultura | Territory | Chaos A.D. (1993) |
+| Slayer | Angel of Death | Reign in Blood (1986) |
+| Slayer | Black Magic | Show No Mercy (1983) |
 
 ### Inimigos
 
@@ -132,9 +165,11 @@ Os créditos também aparecem dentro do jogo, na opção **CRÉDITOS** do menu p
 - **Rips**: Dolphman (Lost Soul, armas,
   rosto do HUD), Planz Doom (Vassago), MG12 (Spider Mastermind e Blob do id Vault), PGE (Ghoul),
   DaColGy, 16-Bit Globe e SuperDave938 (efeitos, menu e HUD).
-- **Efeitos sonoros**: © id Software — rips de Nai255 e InfamousLazure (Legacy of Rust). Os dois riffs de
-  guitarra do level-up (`Assets/heavy/sons`) foram fornecidos pelo autor.
-- **Texturas da catedral e música**: geradas por código neste projeto.
+- **Efeitos sonoros**: © id Software — rips de Nai255 e InfamousLazure (Legacy of Rust). O choque elétrico
+  dos raios e os dois riffs de guitarra do level-up (`Assets/heavy/sons`) foram fornecidos pelo autor.
+- **Trilha sonora**: as músicas listadas acima pertencem aos seus artistas e gravadoras; usadas aqui
+  apenas para fins acadêmicos, sem distribuição comercial.
+- **Texturas da catedral**: geradas por código neste projeto.
 - **Engine**: [Phaser 3](https://phaser.io) (MIT). **Build**: [Vite](https://vitejs.dev).
 
 Projeto acadêmico, sem fins lucrativos. DOOM é marca registrada da id Software LLC; este projeto não

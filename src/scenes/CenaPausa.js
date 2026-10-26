@@ -2,6 +2,7 @@
 import Phaser from 'phaser';
 import { TELA_L, COR } from '../config.js';
 import { sons } from '../systems/Sons.js';
+import { jukebox } from '../systems/Jukebox.js';
 import { texto, veu, ListaDeBotoes, travarMouse, aoTecla } from './ui.js';
 
 export class CenaPausa extends Phaser.Scene {
@@ -14,11 +15,12 @@ export class CenaPausa extends Phaser.Scene {
     veu(this);
     this.add.image(TELA_L / 2, 110, 'menu', 'menu_1_0').setScale(4); // o "PAUSE" original do Doom
 
-    new ListaDeBotoes(this, TELA_L / 2, 220, [
+    new ListaDeBotoes(this, TELA_L / 2, 196, [
       { rotulo: 'CONTINUAR', acao: () => this.continuar() },
+      { rotulo: 'MÚSICA', acao: () => this.abrirMusica() },
       { rotulo: 'REINICIAR', acao: () => this.reiniciar() },
       { rotulo: 'MENU PRINCIPAL', acao: () => this.irParaMenu() },
-    ]);
+    ], { tamanho: 32, espaco: 48 });
 
     // sensibilidade do mouse: guardada no navegador
     const y = 410;
@@ -36,8 +38,11 @@ export class CenaPausa extends Phaser.Scene {
     mostrar();
 
     const s = this.jogo.stats;
-    texto(this, TELA_L / 2, 458, `Onda ${s.onda}   ·   ${s.abates} abates   ·   nível ${this.jogo.jogador.nivel}`, 18, COR.branco);
-    texto(this, TELA_L / 2, 486, 'ESC ou P: continuar   ·   R: reiniciar   ·   M: som', 16, COR.cinza);
+    texto(this, TELA_L / 2, 440, `Onda ${s.onda}   ·   ${s.abates} abates   ·   nível ${this.jogo.jogador.nivel}`, 18, COR.branco);
+    texto(this, TELA_L / 2, 464, 'ESC ou P: continuar   ·   R: reiniciar   ·   M: som (liga/desliga)', 16, COR.cinza);
+
+    const m = jukebox.atual;
+    if (m && jukebox.cfg.ligada) texto(this, TELA_L / 2, 488, `♪  ${m.artista}  —  ${m.titulo}`, 16, COR.amarelo);
 
     // Um pequeno atraso antes de aceitar ESC: a mesma tecla que abriu a pausa não pode fechá-la.
     this.time.delayedCall(250, () => {
@@ -55,6 +60,13 @@ export class CenaPausa extends Phaser.Scene {
     this.jogo.retomar();
   }
 
+  abrirMusica() {
+    if (this.saindo) return;
+    this.saindo = true;
+    this.scene.stop();
+    this.scene.launch('Musica', { jogo: this.jogo });
+  }
+
   reiniciar() {
     if (this.saindo) return;
     this.saindo = true;
@@ -64,7 +76,6 @@ export class CenaPausa extends Phaser.Scene {
   }
 
   irParaMenu() {
-    sons.musica(false);
     this.scene.stop('Hud');
     this.scene.stop('Jogo');
     this.scene.start('Menu');
